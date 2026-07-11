@@ -1,27 +1,36 @@
-### EXAMPLE DOCKER COMPOSE ###
+### audiobookshelf (with Discovery) — deploy on the target Docker host ###
+#
+# 1. Load the image on this host first (one of):
+#      docker load < abs-discovery.tar.gz        # if you copied the tarball over
+#      docker pull <registry>/<user>/audiobookshelf-discovery:latest   # if you pushed to a registry
+#      docker build -t audiobookshelf-discovery:latest .               # if you build on this host
+#
+# 2. Adjust the volume paths on the left of each ':' to match this host, then:
+#      docker compose -f docker-compose.discovery.yml up -d
+#
+# 3. Browse to http://<this-host>:13378  (served at the root path)
+#
 services:
   audiobookshelf:
-    image: ghcr.io/advplyr/audiobookshelf:latest
-    # ABS runs on port 13378 by default. If you want to change
-    # the port, only change the external port, not the internal port
+    image: audiobookshelf-discovery:latest
+    container_name: audiobookshelf
     ports:
+      # host:container — change only the host (left) port if 13378 is taken
       - 13378:80
     volumes:
-      # These volumes are needed to keep your library persistent
-      # and allow media to be accessed by the ABS server.
-      # The path to the left of the colon is the path on your computer,
-      # and the path to the right of the colon is where the data is
-      # available to ABS in Docker.
-      # You can change these media directories or add as many as you want
+      # --- Library media (add/rename as many as you want) ---
       - ./audiobooks:/audiobooks
-      - ./podcasts:/podcasts
-      # The metadata directory can be stored anywhere on your computer
+      - ./ebooks:/ebooks
+      # --- ABS data ---
       - ./metadata:/metadata
-      # The config directory needs to be on the same physical machine
-      # you are running ABS on
       - ./config:/config
+      # --- Discovery imports ---
+      # Mount qBittorrent's COMPLETED-downloads directory here so ABS can import finished
+      # torrents. Then in Settings -> Discovery set "Download Path" to /downloads.
+      # The path on the left must be qBittorrent's real completed-downloads dir on this host.
+      - /path/to/qbittorrent/downloads:/downloads
+    environment:
+      - TZ=Etc/UTC
     restart: unless-stopped
-    # You can use the following user directive to run the ABS
-    # docker container as a specific user. You will need to change
-    # the UID and GID to the correct values for your user.
-    # user: 1000:1000
+    # Run as a specific user if needed (match your media file ownership):
+    # user: "1000:1000"
