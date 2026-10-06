@@ -103,7 +103,7 @@
             <li v-else-if="!storeResults.length" class="py-1.5 px-2 text-xs text-gray-400">{{ $strings.MessageNoStoreResults }}</li>
             <li v-for="book in storeResults" :key="'store.' + (book.asin || book.id)" class="text-gray-50 select-none relative cursor-pointer hover:bg-white/10 rounded-lg py-1 px-1" role="option" @click="openStoreBook(book)">
               <div class="flex items-center gap-3">
-                <div class="w-11 h-11 shrink-0 rounded-md overflow-hidden bg-surface-3">
+                <div class="w-9 h-14 shrink-0 rounded-md overflow-hidden bg-surface-3">
                   <img v-if="book.cover" :src="book.cover" loading="lazy" class="w-full h-full object-cover" alt="" />
                 </div>
                 <div class="min-w-0 grow">

@@ -120,7 +120,7 @@ export default {
         icon: 'database',
         mediaType: 'book',
         settings: {
-          coverAspectRatio: this.$constants.BookCoverAspectRatio.SQUARE,
+          coverAspectRatio: this.$constants.BookCoverAspectRatio.STANDARD,
           disableWatcher: false,
           skipMatchingMediaWithAsin: false,
           skipMatchingMediaWithIsbn: false,
@@ -230,8 +230,11 @@ export default {
     },
     submitCreateLibrary() {
       this.processing = true
+      // Books get book-shaped covers by default; podcast artwork is square
+      const payload = { ...this.libraryCopy, settings: { ...this.libraryCopy.settings } }
+      if (payload.mediaType === 'podcast') payload.settings.coverAspectRatio = this.$constants.BookCoverAspectRatio.SQUARE
       this.$axios
-        .$post('/api/libraries', this.libraryCopy)
+        .$post('/api/libraries', payload)
         .then((res) => {
           this.processing = false
           this.show = false

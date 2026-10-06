@@ -19,7 +19,7 @@
         </div>
 
         <!-- Cover Image -->
-        <img cy-id="coverImage" v-if="libraryItem" :alt="`${displayTitle}, ${$strings.LabelCover}`" ref="cover" aria-hidden="true" :src="bookCoverSrc" class="relative w-full h-full transition-opacity duration-300" :class="showCoverBg ? 'object-contain' : 'object-fill'" @load="imageLoaded" :style="{ opacity: imageReady ? 1 : 0 }" />
+        <img cy-id="coverImage" v-if="libraryItem" :alt="`${displayTitle}, ${$strings.LabelCover}`" ref="cover" aria-hidden="true" :src="bookCoverSrc" class="relative w-full h-full transition-opacity duration-300" :class="showCoverBg ? 'object-contain' : coverCrop ? 'object-cover' : 'object-fill'" @load="imageLoaded" :style="{ opacity: imageReady ? 1 : 0 }" />
 
         <!-- Placeholder Cover Title & Author -->
         <div cy-id="placeholderTitle" v-if="!hasCover" class="absolute top-0 left-0 right-0 bottom-0 w-full h-full flex items-center justify-center" :style="{ padding: placeholderCoverPadding + 'em' }">
@@ -169,7 +169,8 @@ export default {
       isSelectionMode: false,
       displayTitleTruncated: false,
       displaySubtitleTruncated: false,
-      showCoverBg: false
+      showCoverBg: false,
+      coverCrop: false
     }
   },
   watch: {
@@ -1087,8 +1088,11 @@ export default {
         var aspectRatio = naturalHeight / naturalWidth
         var arDiff = Math.abs(aspectRatio - this.bookCoverAspectRatio)
 
-        // If image aspect ratio is <= 1.45 or >= 1.75 then use cover bg, otherwise stretch to fit
-        if (arDiff > 0.15) {
+        // Book-shaped cards: art that's wider than the card (square audiobook covers) fills it, cropped
+        // at the sides, so every book on the shelf has the same book shape. Anything else far off the
+        // card's ratio sits on a blurred copy of itself; close enough is stretched to fit.
+        this.coverCrop = this.bookCoverAspectRatio > 1 && aspectRatio < this.bookCoverAspectRatio - 0.15
+        if (!this.coverCrop && arDiff > 0.15) {
           this.showCoverBg = true
           this.$nextTick(this.setCoverBg)
         } else {

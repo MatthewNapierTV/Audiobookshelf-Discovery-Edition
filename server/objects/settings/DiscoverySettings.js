@@ -39,6 +39,10 @@ class DiscoverySettings {
     // Audible marketplace used for the storefront shelves (us, uk, ca, au, de, fr, it, es, in, jp)
     this.catalogRegion = 'us'
 
+    // Book libraries were switched to rectangular (book-shaped) covers once; never redone, so a
+    // library set back to square covers stays that way
+    this.bookCoversPortraitApplied = false
+
     if (settings) {
       this.construct(settings)
     }
@@ -58,6 +62,7 @@ class DiscoverySettings {
     this.autoGrabMinSeeders = Number.isFinite(Number(settings.autoGrabMinSeeders)) ? Math.max(0, Number(settings.autoGrabMinSeeders)) : 1
     this.preferFreeleech = settings.preferFreeleech !== false
     this.catalogRegion = settings.catalogRegion || 'us'
+    this.bookCoversPortraitApplied = !!settings.bookCoversPortraitApplied
   }
 
   toJSON() {
@@ -75,7 +80,8 @@ class DiscoverySettings {
       indexerIds: [...this.indexerIds],
       autoGrabMinSeeders: this.autoGrabMinSeeders,
       preferFreeleech: this.preferFreeleech,
-      catalogRegion: this.catalogRegion
+      catalogRegion: this.catalogRegion,
+      bookCoversPortraitApplied: this.bookCoversPortraitApplied
     }
   }
 

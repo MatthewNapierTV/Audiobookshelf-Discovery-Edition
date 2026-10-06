@@ -69,9 +69,11 @@ export default {
     isBookLibrary() {
       return this.$store.getters['libraries/getCurrentLibraryMediaType'] === 'book'
     },
+    /** Same size as the library's own cards next to them */
     storeCardWidth() {
       const coverSize = this.$store.getters['user/getUserSetting']('bookshelfCoverSize') || 120
-      return Math.round(coverSize * 1.45)
+      const square = this.$store.getters['libraries/getBookCoverAspectRatio'] === 1
+      return Math.round(square ? coverSize * 1.45 : coverSize)
     },
     wishlistShelf() {
       const items = this.$store.state.wishlist.items

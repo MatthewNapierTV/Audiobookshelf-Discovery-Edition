@@ -1,6 +1,6 @@
 <template>
   <button type="button" class="discovery-book-card abs-card group text-left shrink-0 focus:outline-hidden pt-1" :style="{ width: width + 'px' }" @click="$emit('select', book)">
-    <div class="abs-card-cover relative w-full rounded-[0.6em] overflow-hidden bg-surface-3" :style="{ height: width + 'px' }">
+    <div class="abs-card-cover relative w-full rounded-[0.6em] overflow-hidden bg-surface-3" :style="{ height: coverHeight + 'px' }">
       <img v-if="book.cover" :src="book.cover" loading="lazy" class="w-full h-full object-cover" :alt="book.title" />
       <div v-else class="w-full h-full flex items-center justify-center p-2 text-center text-sm text-gray-300">{{ book.title }}</div>
 
@@ -33,6 +33,10 @@ export default {
     rank: Number
   },
   computed: {
+    /** Book-shaped like the library's own cards (1.6 tall unless the library is set to square covers) */
+    coverHeight() {
+      return Math.round(this.width * (this.$store.getters['libraries/getBookCoverAspectRatio'] || 1.6))
+    },
     statusLabel() {
       if (this.book.status === 'owned') return this.$strings.LabelDiscoveryInLibrary
       if (this.book.status === 'downloading') return this.$strings.LabelDiscoveryDownloading

@@ -65,7 +65,7 @@ class Library extends Model {
       }
     } else {
       return {
-        coverAspectRatio: 1, // Square
+        coverAspectRatio: 0, // Standard (book-shaped)
         disableWatcher: false,
         autoScanCronExpression: null,
         skipMatchingMediaWithAsin: false,

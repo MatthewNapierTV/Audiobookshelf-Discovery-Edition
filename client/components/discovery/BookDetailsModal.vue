@@ -94,12 +94,12 @@ export default {
       details: null,
       loadingDetails: false,
       samplePlaying: false,
-      coverRatio: 1
+      coverRatio: 0.66
     }
   },
   watch: {
     book() {
-      this.coverRatio = 1
+      this.coverRatio = 0.66
       this.lastError = null
       this.details = null
       this.stopSample()
@@ -200,10 +200,10 @@ export default {
         this.$toast.error(this.$strings.ToastFailedToUpdate)
       }
     },
-    /** Shape the cover panel like the actual art (kept between a tall ebook cover and a square audiobook cover) */
+    /** Book-shaped cover panel: a tall cover keeps its own shape, square art is cropped to a book */
     onCoverLoad(e) {
       const { naturalWidth: w, naturalHeight: h } = e.target
-      if (w && h) this.coverRatio = Math.min(1, Math.max(0.62, w / h))
+      if (w && h) this.coverRatio = Math.min(0.7, Math.max(0.6, w / h))
     },
     toggleSample() {
       const audio = this.$refs.sample

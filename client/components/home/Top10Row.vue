@@ -12,7 +12,7 @@
     <div v-drag-scroll class="flex overflow-x-auto no-scroll pb-2 pt-2 pr-8e scroll-smooth snap-x">
       <button v-for="(book, i) in shelf.books" :key="book.asin || book.id" type="button" class="top10-item abs-card group shrink-0 flex items-end snap-start text-left" :style="{ height: cover + 'px' }" @click="$emit('select', book)">
         <span class="top10-rank" :class="{ 'top10-rank-wide': i === 9 }" :style="{ fontSize: cover * 0.95 + 'px' }" aria-hidden="true">{{ i + 1 }}</span>
-        <div class="abs-card-cover relative overflow-hidden rounded-[0.6em] bg-surface-3 -ml-[0.18em]" :style="{ width: cover * 0.82 + 'px', height: cover + 'px' }">
+        <div class="abs-card-cover relative overflow-hidden rounded-[0.6em] bg-surface-3 -ml-[0.18em]" :style="{ width: Math.round(cover / coverRatio) + 'px', height: cover + 'px' }">
           <img :src="book.cover" :alt="book.title" loading="lazy" class="w-full h-full object-cover" />
           <span v-if="book.status === 'owned'" class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[0.6rem] font-semibold bg-success text-white">{{ $strings.LabelDiscoveryInLibrary }}</span>
         </div>
@@ -23,6 +23,11 @@
 
 <script>
 export default {
+  computed: {
+    coverRatio() {
+      return this.$store.getters['libraries/getBookCoverAspectRatio'] || 1.6
+    }
+  },
   props: {
     shelf: Object,
     cover: {

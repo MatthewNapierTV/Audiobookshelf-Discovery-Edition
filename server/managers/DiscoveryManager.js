@@ -67,7 +67,28 @@ class DiscoveryManager {
   /**
    * Called on server start: resume tracking of unfinished downloads and start the retention prune loop.
    */
+  /**
+   * One-time switch of existing book libraries from square to rectangular (book-shaped) covers.
+   * New libraries default to rectangular; anyone can still pick square in the library settings.
+   */
+  async applyPortraitBookCovers() {
+    const settings = this.settings
+    if (!settings || settings.bookCoversPortraitApplied) return
+    const libraries = await Database.libraryModel.findAll({ where: { mediaType: 'book' } })
+    for (const library of libraries) {
+      if (library.settings?.coverAspectRatio !== 1) continue
+      library.settings = { ...library.settings, coverAspectRatio: 0 }
+      library.changed('settings', true)
+      await library.save()
+      Logger.info(`[DiscoveryManager] Library "${library.name}" now uses rectangular book covers`)
+    }
+    settings.bookCoversPortraitApplied = true
+    await Database.updateSetting(settings)
+  }
+
   async init() {
+    await this.applyPortraitBookCovers().catch((error) => Logger.error(`[DiscoveryManager] Failed to switch libraries to book-shaped covers`, error))
+
     this.pruneTimer = setInterval(() => this.pruneOld(), PRUNE_INTERVAL_MS)
     void this.pruneOld()
 
