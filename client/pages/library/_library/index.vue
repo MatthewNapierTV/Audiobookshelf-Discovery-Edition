@@ -5,16 +5,16 @@
     <!-- Book libraries: Netflix / Audible style home -->
     <app-book-shelf-categorized v-if="isBookLibrary" home-feed>
       <template #top>
+        <!-- Showcase reel: highly rated, new and upcoming books -->
         <div v-if="!storefrontLoaded" class="home-hero-skeleton" />
+        <home-hero v-else :books="hero" @open-book="openBook" @toggle-wishlist="toggleWishlist" />
       </template>
 
       <template #before-shelves="{ shelves }">
-        <home-hero :slides="heroSlides(shelves)" @resume="resume" @open-book="openBook" @toggle-wishlist="toggleWishlist" />
-
-        <!-- Today: daily goal + genre shortcuts -->
-        <div class="home-today relative z-10 pl-8e pr-8e mt-6e flex flex-col lg:flex-row gap-5">
+        <!-- Today: daily goal + genre shortcuts (tucked up over the bottom of the reel) -->
+        <div class="home-today relative z-10 pl-8e pr-8e flex flex-col lg:flex-row gap-5" :class="hero.length || !storefrontLoaded ? '-mt-[clamp(2.5rem,7vh,4.5rem)]' : 'mt-6e'">
           <home-goal-card />
-          <div v-if="genres.length" class="surface-card bg-surface-2/70 flex-1 min-w-0 p-5">
+          <div v-if="genres.length" class="surface-card bg-surface-2/75 backdrop-blur-xl flex-1 min-w-0 p-5">
             <p class="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-gray-400 mb-3">{{ $strings.HeaderBrowseGenres }}</p>
             <div class="flex flex-wrap gap-2">
               <nuxt-link v-for="genre in genres" :key="genre.id" :to="genreLink(genre)" class="px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-brand/15 hover:text-brand border border-white/10 text-sm text-gray-200 transition-colors">{{ genre.name }}</nuxt-link>
@@ -121,59 +121,6 @@ export default {
       }
       return []
     },
-    heroSlides(shelves) {
-      const slides = []
-      for (const id of ['continue-listening', 'continue-reading']) {
-        const libraryItem = shelves.find((s) => s.id === id)?.entities?.[0]
-        if (!libraryItem || slides.some((s) => s.libraryItem?.id === libraryItem.id)) continue
-        const metadata = libraryItem.media?.metadata || {}
-        const progress = this.$store.getters['user/getUserMediaProgress'](libraryItem.id)
-        slides.push({
-          key: `resume-${libraryItem.id}`,
-          kind: 'resume',
-          eyebrow: id === 'continue-reading' ? this.$strings.LabelContinueReading : this.$strings.LabelContinueListening,
-          title: metadata.title,
-          author: metadata.authorName || (metadata.authors || []).map((a) => a.name).join(', '),
-          cover: this.$store.getters['globals/getLibraryItemCoverSrc'](libraryItem),
-          description: (metadata.description || '')
-            .replace(/<[^>]+>/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim(),
-          progress: progress ? progress.ebookProgress || progress.progress || 0 : 0,
-          isEbook: id === 'continue-reading',
-          libraryItem
-        })
-      }
-      for (const book of this.hero) {
-        slides.push({
-          key: `store-${book.asin || book.id}`,
-          kind: 'store',
-          eyebrow: this.$strings.LabelFeaturedNewRelease,
-          title: book.title,
-          author: book.author,
-          cover: book.cover,
-          description: book.description,
-          meta: [book.narrator ? `${this.$strings.LabelNarrators}: ${book.narrator}` : null, book.duration ? this.$elapsedPrettyExtended(book.duration * 60, false, false) : null, book.rating ? `★ ${book.rating.toFixed(1)}` : null].filter(Boolean),
-          book
-        })
-      }
-      return slides.slice(0, 7)
-    },
-    async resume(libraryItem) {
-      if (!libraryItem) return
-      const hasAudio = libraryItem.media?.numTracks || libraryItem.media?.tracks?.length || libraryItem.media?.duration
-      if (!hasAudio && libraryItem.media?.ebookFormat) {
-        const expanded = await this.$axios.$get(`/api/items/${libraryItem.id}?expanded=1`).catch(() => null)
-        if (expanded) this.$store.commit('showEReader', { libraryItem: expanded, keepProgress: true })
-        return
-      }
-      const metadata = libraryItem.media?.metadata || {}
-      this.$eventBus.$emit('play-item', {
-        libraryItemId: libraryItem.id,
-        episodeId: null,
-        queueItems: [{ libraryItemId: libraryItem.id, libraryId: libraryItem.libraryId, episodeId: null, title: metadata.title, subtitle: metadata.authorName, caption: '', duration: libraryItem.media?.duration || null, coverPath: libraryItem.media?.coverPath || null }]
-      })
-    },
     openBook(book) {
       this.modalBook = book
       this.showBookModal = true
@@ -234,7 +181,7 @@ export default {
 
 <style>
 .home-hero-skeleton {
-  height: clamp(22rem, 52vh, 34rem);
+  height: clamp(30rem, 74vh, 46rem);
   background: linear-gradient(110deg, rgba(255, 255, 255, 0.02) 30%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.02) 70%);
   background-size: 200% 100%;
   animation: home-shimmer 1.6s linear infinite;

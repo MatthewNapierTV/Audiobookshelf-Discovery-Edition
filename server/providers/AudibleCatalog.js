@@ -94,7 +94,7 @@ class AudibleCatalog {
   async getProducts(opts = {}) {
     const data = await this.get('/products', {
       response_groups: RESPONSE_GROUPS,
-      image_sizes: '500',
+      image_sizes: '500,1215',
       num_results: Math.min(50, Math.max(1, opts.num || 20)),
       products_sort_by: opts.sortBy || 'BestSellers',
       category_id: opts.categoryId,
@@ -121,6 +121,8 @@ class AudibleCatalog {
 
     const images = p.product_images || {}
     const cover = images['500'] || Object.values(images)[0] || null
+    // Larger art for full-width showcase banners
+    const coverLarge = images['1215'] || cover
 
     const rating = p.rating?.overall_distribution
     const seriesList = Array.isArray(p.series) ? p.series : []
@@ -147,6 +149,7 @@ class AudibleCatalog {
           .filter(Boolean)
           .join(', ') || null,
       cover,
+      coverLarge,
       description: AudibleCatalog.stripHtml(p.merchandising_summary || p.publisher_summary || ''),
       publisher: p.publisher_name || null,
       releaseDate: p.release_date || p.issue_date || null,

@@ -61,6 +61,7 @@ class AppleBooksCharts {
       author: r.artistName || null,
       narrator: null,
       cover: artwork,
+      coverLarge: artwork ? artwork.replace('/600x600bb.', '/1200x1200bb.') : null,
       description: null,
       releaseDate: r.releaseDate || null,
       publishedYear: (r.releaseDate || '').split('-')[0] || null,

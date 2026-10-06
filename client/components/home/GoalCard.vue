@@ -1,5 +1,5 @@
 <template>
-  <div v-if="goals" class="goal-card surface-card bg-surface-2/70 shrink-0 w-full sm:w-80 p-5 flex flex-col">
+  <div v-if="goals" class="goal-card surface-card bg-surface-2/75 backdrop-blur-xl shrink-0 w-full sm:w-80 p-5 flex flex-col">
     <div class="flex items-center justify-between mb-3">
       <p class="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-gray-400">{{ $strings.HeaderDailyGoal }}</p>
       <button type="button" class="text-xs text-gray-400 hover:text-white flex items-center gap-0.5" @click="editing = !editing"><span class="material-symbols text-sm">tune</span>{{ goals.goalMinutes }} min</button>

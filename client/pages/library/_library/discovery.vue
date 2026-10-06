@@ -62,21 +62,8 @@
                 {{ $strings.MessageDiscoveryStorefrontUnavailable }}
               </div>
               <template v-else>
-                <!-- Hero: #1 best seller you don't have -->
-                <div v-if="heroBook" class="relative rounded-xl overflow-hidden mb-6 cursor-pointer group" @click="openBook(heroBook)">
-                  <img v-if="heroBook.cover" :src="heroBook.cover" class="absolute inset-0 w-full h-full object-cover blur-2xl opacity-40 scale-125" alt="" />
-                  <div class="absolute inset-0 bg-linear-to-r from-black/80 via-black/50 to-transparent" />
-                  <div class="relative flex items-center gap-6 p-6 md:p-8">
-                    <img v-if="heroBook.cover" :src="heroBook.cover" class="w-32 h-32 md:w-48 md:h-48 rounded-md shadow-2xl object-cover shrink-0 group-hover:scale-[1.02] transition-transform" :alt="heroBook.title" />
-                    <div class="min-w-0">
-                      <p class="text-xs uppercase tracking-widest text-brand font-semibold mb-1">{{ heroShelfTitle }}</p>
-                      <h2 class="text-2xl md:text-4xl font-bold leading-tight line-clamp-2">{{ heroBook.title }}</h2>
-                      <p class="text-sm md:text-base text-gray-200 mt-1">{{ $getString('LabelByAuthor', [heroBook.author || $strings.LabelUnknown]) }}</p>
-                      <p v-if="heroBook.description" class="hidden md:block text-sm text-gray-300 mt-3 max-w-2xl line-clamp-3">{{ heroBook.description }}</p>
-                      <ui-btn color="brand" class="mt-4" small>{{ $strings.ButtonDiscoveryViewDetails }}</ui-btn>
-                    </div>
-                  </div>
-                </div>
+                <!-- Showcase reel: highly rated, new and upcoming books -->
+                <home-hero v-if="heroBooks.length" :books="heroBooks" compact class="mb-6" @open-book="openBook" @toggle-wishlist="toggleWishlist" />
 
                 <!-- Genre chips -->
                 <div v-if="genres.length" class="flex gap-2 overflow-x-auto pb-2 mb-6">
@@ -257,12 +244,7 @@ export default {
     isSearchActive() {
       return !!(this.bookResults.length || this.selectedBook || this.directMode || this.searchedTerm)
     },
-    heroBook() {
-      return this.heroBooks[0] || null
-    },
-    heroShelfTitle() {
-      return this.$strings.LabelFeaturedNewRelease
-    },
+
     sortOptions() {
       return [
         { text: this.$strings.LabelDiscoverySortBestSellers, value: 'BestSellers' },
@@ -282,6 +264,15 @@ export default {
       this.shelves = [data?.top10, ...(data?.shelves || [])].filter(Boolean)
       this.genres = data?.genres || []
       this.storefrontLoading = false
+    },
+    async toggleWishlist(book) {
+      try {
+        const added = await this.$store.dispatch('wishlist/toggle', book)
+        this.$toast.success(added ? this.$strings.ToastAddedToWantToRead : this.$strings.ToastRemovedFromWantToRead)
+      } catch (error) {
+        console.error('Wishlist update failed', error)
+        this.$toast.error(this.$strings.ToastFailedToUpdate)
+      }
     },
     openBook(book) {
       this.modalBook = book
@@ -515,6 +506,7 @@ export default {
   async mounted() {
     this.fetchProviders()
     await this.fetchConfig()
+    this.$store.dispatch('wishlist/load')
     this.applyRouteQuery()
     this.fetchStorefront()
   }

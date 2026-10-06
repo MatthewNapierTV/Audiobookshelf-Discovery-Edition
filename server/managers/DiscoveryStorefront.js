@@ -213,6 +213,7 @@ class DiscoveryStorefront {
     // --- Charts from several sources ---
     const bestSellers = make('best-sellers', 'Top 10 audiobooks today', 'The Audible best-seller chart', catalog.getProducts({ sortBy: 'BestSellers', num: 30 }), { browse: { sortBy: 'BestSellers' }, ranked: true })
     const newReleases = make('new-releases', 'New & noteworthy', 'Popular releases from the last few months', this.getNewReleases(catalog), { browse: { sortBy: '-ReleaseDate' } })
+    const comingSoon = make('coming-soon', 'Coming soon', 'Pre-orders and upcoming releases', this.getComingSoon(catalog))
     const topRated = make('top-rated', 'Top rated', 'Highest rated by listeners', catalog.getProducts({ sortBy: 'AvgRating', num: 30 }), { browse: { sortBy: 'AvgRating' } })
     const appleAudio = make('apple-audiobooks', 'Top audiobooks on Apple Books', 'Updated daily from the Apple Books charts', apple.getTop('audio-books', 30), { source: 'apple' })
     const appleEbooks = make('apple-ebooks', 'Top ebooks on Apple Books', 'Best-selling ebooks right now', apple.getTop('books', 30), { source: 'apple' })
@@ -237,7 +238,7 @@ class DiscoveryStorefront {
 
     // Interleave like a streaming home screen: personal -> fresh -> charts -> genres, with the
     // remaining personal rows sprinkled between genres so the page doesn't feel like one long list
-    const ordered = [...personal, newReleases, authorShelves[0], trending, appleAudio, genreShelves[0], genreShelves[1], authorShelves[1], appleEbooks, genreShelves[2], topRated, authorShelves[2], ...genreShelves.slice(3)].filter(Boolean)
+    const ordered = [...personal, newReleases, authorShelves[0], trending, appleAudio, genreShelves[0], genreShelves[1], authorShelves[1], appleEbooks, genreShelves[2], comingSoon, topRated, authorShelves[2], ...genreShelves.slice(3)].filter(Boolean)
 
     const [top10Raw, ...resolved] = await Promise.all([bestSellers, ...ordered])
     const annotateShelf = (shelf) => {
@@ -250,18 +251,12 @@ class DiscoveryStorefront {
     const top10 = annotateShelf(top10Raw)
     top10.books = top10.books.slice(0, 10)
 
-    // Hero: featured titles with artwork + a blurb, preferring things you don't own yet
-    const heroPool = [...(shelves.find((s) => s.id === 'new-releases')?.books || []), ...top10.books]
-    const heroSeen = new Set()
-    const hero = heroPool
-      .filter((b) => b.cover && b.description && b.status !== 'owned')
-      .filter((b) => {
-        const key = b.asin || b.id
-        if (heroSeen.has(key)) return false
-        heroSeen.add(key)
-        return true
-      })
-      .slice(0, 6)
+    const hero = this.buildShowcase({
+      newReleases: shelves.find((sh) => sh.id === 'new-releases')?.books || [],
+      topRated: shelves.find((sh) => sh.id === 'top-rated')?.books || [],
+      comingSoon: shelves.find((sh) => sh.id === 'coming-soon')?.books || [],
+      bestSellers: top10.books
+    })
 
     return { hero, top10: top10.books.length ? top10 : null, shelves, genres: categories }
   }
@@ -280,6 +275,51 @@ class DiscoveryStorefront {
       return recent.sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
     }
     return catalog.getProducts({ sortBy: '-ReleaseDate', num: 30 })
+  }
+
+  /**
+   * Upcoming titles (release date in the future). Popular pre-orders from the best-seller chart
+   * come first, then the newest-first catalog listing.
+   *
+   * @param {AudibleCatalog} catalog
+   */
+  async getComingSoon(catalog) {
+    const [best, newest] = await Promise.all([catalog.getProducts({ sortBy: 'BestSellers', num: 50 }), catalog.getProducts({ sortBy: '-ReleaseDate', num: 50 })])
+    const now = Date.now()
+    const isUpcoming = (b) => b.releaseDate && new Date(b.releaseDate).valueOf() > now
+    const seen = new Set()
+    return [...best.filter(isUpcoming), ...newest.filter(isUpcoming)].filter((b) => (seen.has(b.asin) ? false : seen.add(b.asin))).sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate))
+  }
+
+  /**
+   * Showcase reel for the home banner: the most highly rated, newest and upcoming books,
+   * interleaved so the reel feels varied. Only titles with art and a blurb make the cut.
+   *
+   * @param {{ newReleases: Object[], topRated: Object[], comingSoon: Object[], bestSellers: Object[] }} pools
+   * @returns {Object[]} cards tagged with showcase: 'new' | 'top' | 'soon' | 'popular'
+   */
+  buildShowcase(pools) {
+    const usable = (b) => b.cover && b.description && b.status !== 'owned'
+    const topRated = pools.topRated.filter((b) => usable(b) && (b.rating || 0) >= 4.5)
+    // Prefer well-reviewed titles (many ratings) so the reel isn't full of obscure 5-star books
+    topRated.sort((a, b) => (b.numRatings >= 500) - (a.numRatings >= 500) || (b.rating || 0) - (a.rating || 0))
+    const lanes = [pools.newReleases.filter(usable).map((b) => ({ ...b, showcase: 'new' })), topRated.map((b) => ({ ...b, showcase: 'top' })), pools.comingSoon.filter(usable).map((b) => ({ ...b, showcase: 'soon' })), pools.bestSellers.filter(usable).map((b) => ({ ...b, showcase: 'popular' }))]
+    const seen = new Set()
+    const reel = []
+    for (let round = 0; reel.length < 8 && lanes.some((l) => l.length); round++) {
+      for (const lane of lanes) {
+        while (lane.length) {
+          const book = lane.shift()
+          const key = book.asin || book.id
+          if (seen.has(key)) continue
+          seen.add(key)
+          reel.push(book)
+          break
+        }
+        if (reel.length >= 8) break
+      }
+    }
+    return reel
   }
 
   /**

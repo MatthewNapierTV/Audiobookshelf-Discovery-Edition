@@ -1,216 +1,458 @@
 <template>
-  <section v-if="slides.length" class="home-hero relative w-full overflow-hidden select-none" :style="{ height: heroHeight }" @mouseenter="paused = true" @mouseleave="paused = false" aria-roledescription="carousel">
-    <!-- Backdrops (cross-fade) -->
-    <transition-group name="hero-fade" tag="div" class="absolute inset-0">
-      <div v-for="(slide, i) in slides" v-show="i === index" :key="slide.key" class="absolute inset-0">
-        <div class="absolute -inset-16 bg-cover bg-center hero-backdrop-img" :style="{ backgroundImage: `url(${slide.cover})` }" />
+  <section v-if="books.length" class="showcase relative w-full overflow-hidden select-none" :class="{ 'is-compact': compact }" aria-roledescription="carousel" :aria-label="$strings.HeaderShowcase" @mouseenter="paused = true" @mouseleave="paused = false">
+    <!-- Art: blurred full-bleed fill + sharp artwork fading in from the right -->
+    <transition-group name="showcase-fade" tag="div" class="absolute inset-0">
+      <div v-for="(book, i) in books" v-show="i === index" :key="keyFor(book)" class="absolute inset-0">
+        <div class="showcase-fill" :style="{ backgroundImage: `url(${artFor(book)})` }" />
+        <img :src="artFor(book)" alt="" class="showcase-art" :class="{ 'is-active': i === index }" />
       </div>
     </transition-group>
-    <div class="absolute inset-0 hero-overlay" />
+    <div class="showcase-shade absolute inset-0" />
 
-    <!-- Content -->
-    <div class="relative h-full max-w-7xl mx-auto px-6 md:px-12 flex items-center gap-8 md:gap-12">
-      <transition name="hero-slide" mode="out-in">
-        <div :key="current.key" class="flex-1 min-w-0 max-w-2xl">
-          <p class="flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-brand mb-3">
-            <span class="material-symbols text-base fill">{{ current.kind === 'resume' ? 'history' : 'auto_awesome' }}</span>
-            {{ current.eyebrow }}
+    <!-- Copy -->
+    <div class="relative h-full flex items-end pb-[clamp(5.5rem,13vh,8rem)] pl-8e pr-8e">
+      <transition name="showcase-copy" mode="out-in">
+        <div :key="keyFor(current)" class="w-full max-w-[44rem]">
+          <p class="showcase-tag" :class="`is-${current.showcase || 'new'}`">
+            <span class="material-symbols fill text-[1.05em]">{{ tagIcon }}</span
+            >{{ tagText }}
           </p>
-          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.05] line-clamp-2 drop-shadow-[0_4px_24px_rgba(0,0,0,0.6)]">{{ current.title }}</h1>
-          <p v-if="current.author" class="mt-2 text-base md:text-lg text-gray-200">{{ $getString('LabelByAuthor', [current.author]) }}</p>
-          <div v-if="current.meta && current.meta.length" class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-300">
-            <span v-for="m in current.meta" :key="m" class="flex items-center">{{ m }}</span>
-          </div>
-          <p v-if="current.description" class="hidden sm:block mt-4 text-sm md:text-[0.95rem] leading-relaxed text-gray-300 line-clamp-3 max-w-xl">{{ current.description }}</p>
+          <h1 class="showcase-title">{{ current.title }}</h1>
+          <p v-if="current.author" class="mt-1.5 text-[1.05rem] md:text-lg text-gray-200">
+            {{ $getString('LabelByAuthor', [current.author]) }}<span v-if="current.narrator" class="text-gray-400"> · {{ $strings.LabelNarrators }}: {{ current.narrator }}</span>
+          </p>
 
-          <div v-if="current.kind === 'resume' && current.progress" class="mt-4 max-w-sm">
-            <div class="h-1.5 rounded-full bg-white/15 overflow-hidden"><div class="h-full rounded-full bg-linear-to-r from-brand to-brand-strong" :style="{ width: Math.round(current.progress * 100) + '%' }" /></div>
-            <p class="text-xs text-gray-400 mt-1">{{ Math.round(current.progress * 100) }}% complete</p>
+          <div class="showcase-rule" />
+          <div class="showcase-meta">
+            <span v-for="(m, i) in meta" :key="i" class="showcase-meta-item" :class="{ 'is-wide': m.wide }">
+              <span v-if="m.icon" class="material-symbols fill text-[1.1em] text-yellow-400 -mt-px">{{ m.icon }}</span
+              >{{ m.text }}
+            </span>
           </div>
+          <p v-if="current.description" class="showcase-desc">{{ current.description }}</p>
 
-          <div class="mt-6 flex flex-wrap items-center gap-3">
-            <template v-if="current.kind === 'resume'">
-              <button type="button" class="hero-btn btn-brand" @click="$emit('resume', current.libraryItem)">
-                <span class="material-symbols fill text-2xl">{{ current.isEbook ? 'auto_stories' : 'play_arrow' }}</span
-                >{{ current.isEbook ? $strings.ButtonRead : $strings.ButtonPlay }}
-              </button>
-              <nuxt-link :to="`/item/${current.libraryItem.id}`" class="hero-btn hero-btn-glass"> <span class="material-symbols text-xl">info</span>{{ $strings.ButtonDiscoveryViewDetails }} </nuxt-link>
-            </template>
-            <template v-else>
-              <button type="button" class="hero-btn btn-brand" @click="$emit('open-book', current.book)"><span class="material-symbols fill text-xl">info</span>{{ $strings.ButtonDiscoveryViewDetails }}</button>
-              <button type="button" class="hero-btn hero-btn-glass" :aria-pressed="inWishlist(current.book)" @click="$emit('toggle-wishlist', current.book)">
-                <span class="material-symbols text-xl" :class="{ fill: inWishlist(current.book) }">{{ inWishlist(current.book) ? 'bookmark_added' : 'bookmark_add' }}</span
-                >{{ inWishlist(current.book) ? $strings.LabelOnWantToRead : $strings.ButtonWantToRead }}
-              </button>
-            </template>
+          <div class="mt-5 flex items-center gap-3">
+            <button v-if="current.sampleUrl" type="button" class="showcase-primary" @click="toggleSample">
+              <span class="material-symbols fill text-2xl">{{ samplePlaying ? 'pause' : 'play_arrow' }}</span
+              >{{ samplePlaying ? $strings.ButtonPause : $strings.ButtonSample }}
+            </button>
+            <button v-else type="button" class="showcase-primary" @click="$emit('open-book', current)"><span class="material-symbols fill text-2xl">menu_book</span>{{ $strings.ButtonDiscoveryViewDetails }}</button>
+            <button type="button" class="showcase-round" :aria-label="$strings.ButtonDiscoveryViewDetails" @click="$emit('open-book', current)">
+              <span class="material-symbols text-[1.6rem]">info</span>
+            </button>
+            <button type="button" class="showcase-round" :class="{ 'is-on': inWishlist }" :aria-pressed="inWishlist" :aria-label="$strings.ButtonWantToRead" @click="$emit('toggle-wishlist', current)">
+              <span class="material-symbols text-[1.6rem]" :class="{ fill: inWishlist }">favorite</span>
+            </button>
           </div>
-        </div>
-      </transition>
-
-      <!-- Cover art -->
-      <transition name="hero-cover" mode="out-in">
-        <div :key="current.key + '-cover'" class="hidden md:block shrink-0 hero-cover-wrap">
-          <img :src="current.cover" :alt="current.title" class="w-56 lg:w-72 aspect-square object-cover rounded-xl shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9)] ring-1 ring-white/15" />
         </div>
       </transition>
     </div>
 
-    <!-- Controls -->
-    <div v-if="slides.length > 1" class="absolute bottom-5 left-0 right-0 flex items-center justify-center gap-2 z-10">
-      <button v-for="(slide, i) in slides" :key="slide.key + '-dot'" type="button" :aria-label="`Slide ${i + 1}`" class="h-1.5 rounded-full transition-all duration-300" :class="i === index ? 'w-8 bg-brand' : 'w-3 bg-white/30 hover:bg-white/60'" @click="go(i)" />
+    <!-- Progress dots (the active one fills while the slide is on screen) -->
+    <div v-if="books.length > 1" class="absolute left-0 bottom-[clamp(3.5rem,9vh,5.5rem)] pl-8e flex items-center gap-1.5 z-10">
+      <button v-for="(book, i) in books" :key="keyFor(book) + '-dot'" type="button" class="showcase-dot" :class="{ 'is-active': i === index, 'is-paused': paused }" :aria-label="`${i + 1} / ${books.length}: ${book.title}`" @click="go(i)">
+        <span v-if="i === index" :key="cycle" class="showcase-dot-fill" :style="{ animationDuration: interval + 'ms' }" @animationend="next" />
+      </button>
     </div>
-    <button v-if="slides.length > 1" type="button" class="hero-arrow left-3" aria-label="Previous" @click="go(index - 1)"><span class="material-symbols text-3xl">chevron_left</span></button>
-    <button v-if="slides.length > 1" type="button" class="hero-arrow right-3" aria-label="Next" @click="go(index + 1)"><span class="material-symbols text-3xl">chevron_right</span></button>
+    <div v-if="books.length > 1" class="showcase-pager absolute right-0 bottom-[clamp(3rem,8.5vh,5rem)] pr-8e flex items-center gap-2 z-10">
+      <span class="text-xs tabular-nums text-gray-300 mr-1">{{ index + 1 }} / {{ books.length }}</span>
+      <button type="button" class="showcase-arrow" :aria-label="$strings.ButtonPrevious" @click="go(index - 1)"><span class="material-symbols text-2xl">chevron_left</span></button>
+      <button type="button" class="showcase-arrow" :aria-label="$strings.ButtonNext" @click="go(index + 1)"><span class="material-symbols text-2xl">chevron_right</span></button>
+    </div>
+
+    <audio v-if="current.sampleUrl" ref="sample" :src="current.sampleUrl" preload="none" @play="samplePlaying = true" @pause="sampleStopped" @ended="sampleStopped" />
   </section>
 </template>
 
 <script>
 export default {
   props: {
-    slides: {
+    books: {
       type: Array,
       default: () => []
-    }
+    },
+    interval: {
+      type: Number,
+      default: 9000
+    },
+    // Shorter banner for embedding inside a page (e.g. the Discovery page)
+    compact: Boolean
   },
   data() {
     return {
       index: 0,
+      cycle: 0,
       paused: false,
-      timer: null
+      samplePlaying: false
     }
   },
   computed: {
     current() {
-      return this.slides[this.index] || this.slides[0] || {}
+      return this.books[this.index] || this.books[0] || {}
     },
-    heroHeight() {
-      return 'clamp(22rem, 52vh, 34rem)'
+    inWishlist() {
+      return this.$store.getters['wishlist/has'](this.current)
+    },
+    tagIcon() {
+      return { new: 'new_releases', top: 'workspace_premium', soon: 'event_upcoming', popular: 'trending_up' }[this.current.showcase] || 'auto_awesome'
+    },
+    tagText() {
+      const s = this.current.showcase
+      if (s === 'soon') return this.current.releaseDate ? this.$getString('LabelComingOnDate', [this.formatDate(this.current.releaseDate)]) : this.$strings.LabelComingSoon
+      if (s === 'top') return this.$strings.LabelTopRated
+      if (s === 'popular') return this.$strings.LabelBestSeller
+      return this.$strings.LabelNewRelease
+    },
+    meta() {
+      const b = this.current
+      const out = []
+      if (b.publishedYear) out.push({ text: b.publishedYear })
+      if (b.rating) out.push({ icon: 'star', text: b.rating.toFixed(1) })
+      if (b.duration) out.push({ text: this.$elapsedPrettyExtended(b.duration * 60, false, false) })
+      if (b.genres?.length) out.push({ text: b.genres.slice(0, 2).join(' · '), wide: true })
+      if (b.format === 'ebook') out.push({ text: this.$strings.LabelEbook })
+      return out
     }
   },
   watch: {
-    slides() {
-      if (this.index >= this.slides.length) this.index = 0
+    books() {
+      if (this.index >= this.books.length) this.index = 0
     }
   },
   methods: {
-    inWishlist(book) {
-      return this.$store.getters['wishlist/has'](book)
+    keyFor(book) {
+      return book.asin || book.id || book.title
+    },
+    artFor(book) {
+      return book.coverLarge || book.cover
+    },
+    formatDate(date) {
+      const d = new Date(date)
+      return isNaN(d) ? date : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    },
+    stopSample() {
+      const audio = this.$refs.sample
+      if (audio && !audio.paused) audio.pause()
+      this.samplePlaying = false
+    },
+    toggleSample() {
+      const audio = this.$refs.sample
+      if (!audio) return
+      if (audio.paused) {
+        audio.play().catch((error) => console.error('Sample playback failed', error))
+      } else {
+        audio.pause()
+      }
     },
     go(i) {
-      const n = this.slides.length
+      const n = this.books.length
       if (!n) return
+      this.stopSample()
       this.index = (i + n) % n
-      this.restart()
+      this.cycle++
     },
-    restart() {
-      clearInterval(this.timer)
-      this.timer = setInterval(() => {
-        if (this.paused || document.visibilityState !== 'visible') return
-        if (this.slides.length > 1) this.index = (this.index + 1) % this.slides.length
-      }, 8000)
+    sampleStopped() {
+      this.samplePlaying = false
+      this.cycle++ // restart this slide's timer after a sample
+    },
+    next() {
+      if (this.paused || this.samplePlaying || document.visibilityState !== 'visible') {
+        // Not a good moment to advance (hovered, sample playing, tab hidden): run the timer again
+        this.cycle++
+        return
+      }
+      this.go(this.index + 1)
     }
   },
-  mounted() {
-    this.restart()
-  },
   beforeDestroy() {
-    clearInterval(this.timer)
+    this.stopSample()
   }
 }
 </script>
 
 <style scoped>
-.hero-backdrop-img {
-  filter: blur(48px) saturate(150%);
-  opacity: 0.55;
-  transform: scale(1.1);
+.showcase {
+  height: clamp(30rem, 74vh, 46rem);
+  font-size: 1rem;
 }
-.hero-overlay {
-  background: linear-gradient(90deg, rgba(13, 15, 19, 0.95) 0%, rgba(13, 15, 19, 0.75) 40%, rgba(13, 15, 19, 0.2) 100%), linear-gradient(180deg, rgba(13, 15, 19, 0) 55%, #111317 100%);
+.showcase.is-compact {
+  height: clamp(24rem, 58vh, 34rem);
+  border-radius: 1rem;
 }
-.hero-btn {
+.showcase.is-compact .showcase-title {
+  font-size: clamp(1.8rem, 3.4vw, 3rem);
+}
+.showcase-fill {
+  position: absolute;
+  inset: -80px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(70px) saturate(160%) brightness(0.75);
+  transform: scale(1.15);
+}
+/* Square book art can't fill a wide banner, so it's anchored right at full height and faded into the fill */
+.showcase-art {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(72%, 100vh);
+  object-fit: cover;
+  object-position: center 30%;
+  -webkit-mask-image: linear-gradient(to left, #000 55%, transparent 100%), linear-gradient(to top, transparent 0%, #000 35%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to left, #000 55%, transparent 100%), linear-gradient(to top, transparent 0%, #000 35%);
+  mask-composite: intersect;
+  transform: scale(1.06);
+}
+.showcase-art.is-active {
+  animation: showcase-kenburns 14s ease-out forwards;
+}
+@keyframes showcase-kenburns {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+.showcase-shade {
+  background: linear-gradient(90deg, rgba(13, 15, 19, 0.92) 0%, rgba(13, 15, 19, 0.7) 32%, rgba(13, 15, 19, 0.15) 62%, rgba(13, 15, 19, 0) 100%), linear-gradient(180deg, rgba(13, 15, 19, 0.35) 0%, rgba(13, 15, 19, 0) 25%, rgba(13, 15, 19, 0) 55%, #111317 100%);
+}
+.showcase-tag {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  height: 2.9rem;
-  padding: 0 1.4rem 0 1.1rem;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.7rem 0.35rem 0.55rem;
   border-radius: 999px;
+  margin-bottom: 0.9rem;
+  backdrop-filter: blur(8px);
+  background: rgba(25, 200, 245, 0.16);
+  color: #7fe3ff;
+  border: 1px solid rgba(25, 200, 245, 0.35);
+}
+.showcase-tag.is-top {
+  background: rgba(250, 204, 21, 0.14);
+  color: #fde68a;
+  border-color: rgba(250, 204, 21, 0.35);
+}
+.showcase-tag.is-soon {
+  background: rgba(168, 85, 247, 0.16);
+  color: #e9d5ff;
+  border-color: rgba(168, 85, 247, 0.4);
+}
+.showcase-title {
+  font-size: clamp(2.1rem, 4.6vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.55);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.showcase-rule {
+  width: min(32rem, 100%);
+  height: 1px;
+  margin: 1.1rem 0 0.8rem;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0));
+}
+.showcase-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 0.78rem;
   font-weight: 600;
-  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #e5e7eb;
+}
+.showcase-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+@media (max-width: 639px) {
+  .showcase-meta-item.is-wide {
+    display: none;
+  }
+}
+.showcase-meta-item + .showcase-meta-item::before {
+  content: '';
+  width: 1px;
+  height: 0.95rem;
+  margin: 0 0.8rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+.showcase-desc {
+  margin-top: 0.85rem;
+  max-width: 40rem;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: #d1d5db;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+}
+.showcase-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 3.1rem;
+  padding: 0 1.6rem 0 1.15rem;
+  border-radius: 999px;
+  background: #fff;
+  color: #0b0d11;
+  font-weight: 700;
+  font-size: 1.05rem;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
   transition:
     transform 0.15s ease,
     background-color 0.2s ease;
 }
-.hero-btn:hover {
+.showcase-primary:hover {
   transform: translateY(-1px);
+  background: #e9f9ff;
 }
-.hero-btn-glass {
-  background-color: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(12px);
-  color: #fff;
-}
-.hero-btn-glass:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-.hero-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 2.75rem;
-  height: 2.75rem;
+.showcase-round {
+  width: 3.1rem;
+  height: 3.1rem;
   border-radius: 999px;
-  display: none;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  z-index: 10;
+  background: rgba(20, 22, 28, 0.45);
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(10px);
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
-@media (min-width: 768px) {
-  .hero-arrow {
-    display: flex;
+.showcase-round:hover {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+}
+.showcase-round.is-on {
+  color: #ff5a7a;
+  border-color: #ff5a7a;
+}
+.showcase-dot {
+  position: relative;
+  height: 0.3rem;
+  width: 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+  overflow: hidden;
+  transition:
+    width 0.3s ease,
+    background-color 0.2s ease;
+}
+.showcase-dot:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+.showcase-dot.is-active {
+  width: 2.25rem;
+  background: rgba(255, 255, 255, 0.25);
+}
+.showcase-dot-fill {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  transform-origin: left;
+  animation-name: showcase-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+.showcase-dot.is-paused .showcase-dot-fill {
+  animation-play-state: paused;
+}
+@keyframes showcase-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
   }
 }
-.home-hero:hover .hero-arrow {
+.showcase-arrow {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: rgba(20, 22, 28, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+.showcase-arrow:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+.showcase-pager {
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+.showcase:hover .showcase-pager {
   opacity: 1;
 }
-.hero-fade-enter-active,
-.hero-fade-leave-active {
-  transition: opacity 0.8s ease;
+@media (max-width: 767px) {
+  .showcase-pager {
+    display: none;
+  }
 }
-.hero-fade-enter,
-.hero-fade-leave-to {
+@media (max-width: 767px) {
+  .showcase-art {
+    width: 100%;
+    opacity: 0.55;
+  }
+  .showcase-shade {
+    background: linear-gradient(180deg, rgba(13, 15, 19, 0.2) 0%, rgba(13, 15, 19, 0.65) 45%, #111317 100%);
+  }
+}
+.showcase-fade-enter-active,
+.showcase-fade-leave-active {
+  transition: opacity 0.9s ease;
+}
+.showcase-fade-enter,
+.showcase-fade-leave-to {
   opacity: 0;
 }
-.hero-slide-enter-active,
-.hero-slide-leave-active,
-.hero-cover-enter-active,
-.hero-cover-leave-active {
+.showcase-copy-enter-active,
+.showcase-copy-leave-active {
   transition:
-    opacity 0.4s ease,
-    transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    opacity 0.45s ease,
+    transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.hero-slide-enter,
-.hero-cover-enter {
+.showcase-copy-enter {
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(14px);
 }
-.hero-slide-leave-to,
-.hero-cover-leave-to {
+.showcase-copy-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-6px);
 }
 @media (prefers-reduced-motion: reduce) {
-  .hero-slide-enter-active,
-  .hero-slide-leave-active,
-  .hero-cover-enter-active,
-  .hero-cover-leave-active,
-  .hero-fade-enter-active,
-  .hero-fade-leave-active {
+  .showcase-art.is-active {
+    animation: none;
+  }
+  .showcase-copy-enter-active,
+  .showcase-copy-leave-active,
+  .showcase-fade-enter-active,
+  .showcase-fade-leave-active {
     transition: none;
   }
 }
