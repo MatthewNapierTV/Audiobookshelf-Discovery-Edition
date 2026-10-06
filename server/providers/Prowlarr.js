@@ -56,13 +56,36 @@ class Prowlarr {
   }
 
   /**
+   * List the indexers configured in Prowlarr (used to restrict Discovery to e.g. a private tracker)
+   * @returns {Promise<{id:number, name:string, protocol:string, enable:boolean, privacy:string}[]>}
+   */
+  async getIndexers() {
+    if (!this.isConfigured) return []
+    try {
+      const response = await this.getClient(15000).get('/indexer')
+      if (!Array.isArray(response.data)) return []
+      return response.data.map((i) => ({
+        id: i.id,
+        name: i.name,
+        protocol: i.protocol || 'torrent',
+        enable: i.enable !== false,
+        privacy: i.privacy || null
+      }))
+    } catch (error) {
+      Logger.error(`[Prowlarr] getIndexers failed: ${error.message}`)
+      return []
+    }
+  }
+
+  /**
    * Search indexers for audiobook releases
    *
    * @param {string} query
    * @param {number[]} [categories] - Newznab/Torznab category ids. Defaults to 3030 (Audiobook).
+   * @param {number[]} [indexerIds] - restrict the search to these Prowlarr indexers (empty = all)
    * @returns {Promise<Object[]>} normalized releases
    */
-  async search(query, categories = [3030]) {
+  async search(query, categories = [3030], indexerIds = []) {
     if (!this.isConfigured) {
       Logger.error('[Prowlarr] search called but not configured')
       return []
@@ -73,13 +96,15 @@ class Prowlarr {
       // Prowlarr fans a query out to every enabled indexer; with many indexers (and FlareSolverr in
       // the mix) this can take well over the default 20s. Use a generous timeout so slow indexers
       // don't cause an empty result that the user has to retry several times.
+      const params = {
+        query,
+        type: 'search',
+        limit: 100,
+        categories
+      }
+      if (indexerIds?.length) params.indexerIds = indexerIds
       const response = await this.getClient(90000).get('/search', {
-        params: {
-          query,
-          type: 'search',
-          limit: 100,
-          categories
-        },
+        params,
         // axios 0.27 serializes arrays as categories[]=; Prowlarr expects repeated categories=
         paramsSerializer: (params) => {
           const parts = []
@@ -110,7 +135,10 @@ class Prowlarr {
    */
   normalizeRelease(r) {
     const catObjs = Array.isArray(r.categories) ? r.categories : []
-    const categoryIds = catObjs.map((c) => (typeof c === 'object' ? c.id : c)).map(Number).filter((n) => !isNaN(n))
+    const categoryIds = catObjs
+      .map((c) => (typeof c === 'object' ? c.id : c))
+      .map(Number)
+      .filter((n) => !isNaN(n))
     const categoryNames = catObjs.map((c) => (typeof c === 'object' ? c.name : c)).filter(Boolean)
 
     return {
@@ -127,6 +155,8 @@ class Prowlarr {
       magnetUrl: r.magnetUrl || null,
       infoUrl: r.infoUrl || null,
       categories: categoryNames,
+      // e.g. ["freeleech"] - Prowlarr maps tracker specific flags (MAM freeleech/VIP) onto these
+      indexerFlags: Array.isArray(r.indexerFlags) ? r.indexerFlags.map((f) => String(f)) : [],
       mediaType: Prowlarr.classifyMediaType(categoryIds, r.title)
     }
   }

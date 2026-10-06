@@ -136,6 +136,109 @@ class DiscoveryController {
   }
 
   /**
+   * GET: /api/discovery/indexers  (admin)
+   * Prowlarr indexers, so Discovery can be restricted to specific trackers.
+   *
+   * @param {RequestWithUser} req
+   * @param {Response} res
+   */
+  async getIndexers(req, res) {
+    const settings = Database.discoverySettings
+    const prowlarr = new Prowlarr(settings.prowlarrHost, settings.prowlarrApiKey)
+    res.json({ indexers: await prowlarr.getIndexers() })
+  }
+
+  /**
+   * GET: /api/discovery/storefront
+   * Audible-style shelves (personalized, charts, genres) annotated with library status.
+   *
+   * @this {import('../routers/ApiRouter')}
+   * @param {RequestWithUser} req
+   * @param {Response} res
+   */
+  async getStorefront(req, res) {
+    try {
+      res.json(await this.discoveryManager.storefront.getStorefront(req.user))
+    } catch (error) {
+      Logger.error(`[DiscoveryController] getStorefront failed: ${error.message}`)
+      res.status(500).json({ error: error.message })
+    }
+  }
+
+  /**
+   * GET: /api/discovery/browse?categoryId=&keywords=&author=&sortBy=
+   * "See all" for a shelf or genre.
+   *
+   * @this {import('../routers/ApiRouter')}
+   * @param {RequestWithUser} req
+   * @param {Response} res
+   */
+  async browse(req, res) {
+    const opts = {
+      categoryId: getQueryParamAsString(req.query, 'categoryId', '') || undefined,
+      keywords: getQueryParamAsString(req.query, 'keywords', '') || undefined,
+      author: getQueryParamAsString(req.query, 'author', '') || undefined,
+      sortBy: getQueryParamAsString(req.query, 'sortBy', 'BestSellers')
+    }
+    if (opts.categoryId && !/^\d+$/.test(opts.categoryId)) {
+      return res.status(400).json({ error: 'Invalid categoryId' })
+    }
+    try {
+      res.json({ books: await this.discoveryManager.storefront.browse(req.user, opts) })
+    } catch (error) {
+      Logger.error(`[DiscoveryController] browse failed: ${error.message}`)
+      res.status(500).json({ error: error.message })
+    }
+  }
+
+  /**
+   * POST: /api/discovery/grab
+   * Body: { book: { title, author, cover, ... }, mediaType, libraryId }
+   * One-click "Get" from the storefront: auto-select the best release, then download or request it.
+   *
+   * @this {import('../routers/ApiRouter')}
+   * @param {RequestWithUser} req
+   * @param {Response} res
+   */
+  async grab(req, res) {
+    const { book, mediaType, libraryId } = req.body || {}
+    if (!book?.title || typeof book.title !== 'string') {
+      return res.status(400).json({ error: 'book.title is required' })
+    }
+    if (!Database.discoverySettings.isValid) {
+      return res.status(400).json({ error: 'Discovery is not fully configured' })
+    }
+    if (!req.user.canDiscoveryDownload && !req.user.canDiscoveryRequest) {
+      return res.sendStatus(403)
+    }
+    const targetLibraryId = libraryId || Database.discoverySettings.defaultLibraryId
+    if (!targetLibraryId || !req.user.checkCanAccessLibrary(targetLibraryId)) {
+      return res.sendStatus(403)
+    }
+
+    const cleanBook = {
+      title: String(book.title),
+      author: typeof book.author === 'string' ? book.author : '',
+      cover: typeof book.cover === 'string' ? book.cover : null
+    }
+    try {
+      const result = await this.discoveryManager.grab({ user: req.user, book: cleanBook, mediaType, libraryId: targetLibraryId })
+      if (!req.user.isAdminOrUp) {
+        if (result.download?.release) result.download.release.indexer = null
+        if (result.request?.release) result.request.release.indexer = null
+      }
+      Logger.info(`[DiscoveryController] User "${req.user.username}" grabbed "${cleanBook.title}" (${result.download ? 'download' : 'request'})`)
+      res.json(result)
+    } catch (error) {
+      if (error.code === 'NO_MATCH') {
+        return res.status(404).json({ error: error.message, code: error.code })
+      }
+      Logger.error(`[DiscoveryController] grab failed: ${error.message}`)
+      res.status(500).json({ error: error.message })
+    }
+  }
+
+  /**
    * GET: /api/discovery/downloads
    * @this {import('../routers/ApiRouter')}
    * @param {RequestWithUser} req

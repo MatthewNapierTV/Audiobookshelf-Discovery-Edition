@@ -16,6 +16,20 @@ Join the community for help, updates, and discussion: **https://discord.gg/CTpdu
 
 ## What it adds
 
+### 🛍️ Storefront (Audible-style browse → one-click Get)
+- The Discovery page now opens on a **storefront**: a featured hero, genre chips and horizontally
+  scrolling shelves of covers — **Best sellers**, **New & noteworthy**, **Top rated** and a shelf per
+  genre (ordered by what's most common in your library), all pulled from the public Audible catalog.
+- **Personalized shelves** built from your library: **Continue your series** (the next book you don't
+  have yet) and **More from &lt;author&gt;** for the authors you collect most.
+- Every cover is badged **In library**, **Downloading** or **Requested**, so you never grab a book twice.
+- Click a cover for an Audible-like details sheet (cover, narrator, length, rating, series, summary) with
+  **Get audiobook** / **Get ebook**. "Get" searches your Prowlarr indexers, **automatically picks the best
+  release** (title + author match, m4b/epub preferred, seeders, freeleech, no samples/abridged), and sends
+  it to qBittorrent. Users without download rights see **Request** instead, which goes through the
+  approval queue. If no release matches confidently you're dropped into the manual picker.
+- **See all** on any shelf or genre opens a full grid sortable by best sellers / newest / top rated.
+
 ### 📚 Discovery (search → download)
 - A **Discovery** button in the library sidebar (book libraries).
 - **Step 1 – Find the book:** search book metadata via a choice of providers — **Audible, Google
@@ -119,6 +133,28 @@ Settings → **Discovery** (admin):
 | **Target Library** | your book library |
 
 Enable it, hit **Test Connection** (both should go green), and Save.
+
+**One-click Get** (same page):
+
+| Field | Value |
+|---|---|
+| **Indexers to search** | tick e.g. only **MyAnonamouse** to pin Discovery to it; leave all unticked to use every enabled Prowlarr indexer |
+| **Minimum seeders** | releases below this are never auto-picked (default 1) |
+| **Prefer freeleech** | boosts releases Prowlarr flags as freeleech (MAM FL/VIP) so they don't hit your ratio |
+| **Storefront region** | Audible marketplace for the shelves (US, UK, CA, AU, DE, …) |
+
+### Fitting into an *arr stack
+Discovery plugs into the same services Radarr/Sonarr/Lidarr already use — it doesn't need its own:
+
+- **Prowlarr** is the single indexer manager. Add MyAnonamouse (or any book tracker) there once; Discovery
+  queries it through Prowlarr's API, just like the *arrs. Torznab categories 3030 (audiobook) and 7020
+  (ebook) are used, so movie/TV indexers are ignored automatically.
+- **qBittorrent** can be the same instance your *arrs use. Discovery adds torrents under its own
+  **category** (default `audiobookshelf`), so Radarr/Sonarr never see or import them, and vice versa.
+- Discovery **copies** finished files into your library (it never moves or deletes them), so torrents
+  keep seeding — important for ratio-tracked private trackers like MAM.
+- It effectively fills the gap left by the retired Readarr: request/approve like Overseerr/Jellyseerr,
+  browse like Audible, import into audiobookshelf.
 
 ### The Download Path — the one thing to get right
 `Download Path` must be the folder **inside the container** where qBittorrent's *completed* files

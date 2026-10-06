@@ -10,6 +10,8 @@ const QBittorrentClient = require('../utils/qbittorrent')
 const { getInfoHashFromMagnet } = require('../utils/qbittorrent')
 const LibraryScanner = require('../scanner/LibraryScanner')
 const TaskManager = require('./TaskManager')
+const DiscoveryStorefront = require('./DiscoveryStorefront')
+const { rankReleases, cleanTitle, primaryAuthorSurname } = require('../utils/discoveryReleaseScorer')
 
 const { sanitizeFilename, filePathToPOSIX } = require('../utils/fileUtils')
 
@@ -36,6 +38,7 @@ class DiscoveryManager {
     this.transient = {}
     /** @type {Set<string>} download ids currently importing (in-process re-entry guard) */
     this.importing = new Set()
+    this.storefront = new DiscoveryStorefront()
   }
 
   get settings() {
@@ -83,7 +86,63 @@ class DiscoveryManager {
     if (!this.settings.prowlarrHost || !this.settings.prowlarrApiKey) {
       throw new Error('Prowlarr is not configured')
     }
-    return this.getProwlarrClient().search(query, categories?.length ? categories : undefined)
+    return this.getProwlarrClient().search(query, categories?.length ? categories : undefined, this.settings.indexerIds)
+  }
+
+  /**
+   * Find the best release for a book without user interaction (storefront one-click "Get").
+   * Tries "title author-surname" first (tighter), then the title alone, since indexers match on
+   * the whole phrase and some releases don't carry the author name.
+   *
+   * @param {{ title: string, author?: string }} book
+   * @param {'audiobook'|'ebook'} mediaType
+   * @returns {Promise<{ best: Object|null, candidates: Object[] }>}
+   */
+  async findBestRelease(book, mediaType = 'audiobook') {
+    const categories = mediaType === 'ebook' ? [7020] : [3030]
+    const title = cleanTitle(book.title)
+    const surname = primaryAuthorSurname(book.author)
+    const queries = [...new Set([surname ? `${title} ${surname}` : null, title].filter(Boolean))]
+    const options = { mediaType, minSeeders: this.settings.autoGrabMinSeeders, preferFreeleech: this.settings.preferFreeleech }
+
+    let candidates = []
+    for (const query of queries) {
+      const releases = await this.searchReleases(query, categories)
+      candidates = rankReleases(releases, book, options)
+      if (candidates.length) break
+    }
+    return { best: candidates[0] || null, candidates: candidates.slice(0, 10) }
+  }
+
+  /**
+   * Storefront one-click: pick the best release and either download it (if permitted) or file a
+   * request for it.
+   *
+   * @param {{ user: import('../models/User'), book: Object, mediaType?: 'audiobook'|'ebook', libraryId?: string }} payload
+   * @returns {Promise<{ download?: Object, request?: Object, release?: Object }>}
+   */
+  async grab(payload) {
+    const { user, book } = payload
+    const mediaType = payload.mediaType === 'ebook' ? 'ebook' : 'audiobook'
+    if (!book?.title) throw new Error('A book title is required')
+
+    const { best } = await this.findBestRelease(book, mediaType)
+    if (!best) {
+      const err = new Error('No confident match found on your indexers. Pick a release manually.')
+      err.code = 'NO_MATCH'
+      throw err
+    }
+    Logger.info(`[DiscoveryManager] Auto-selected "${best.title}" (score ${best.score}) for "${book.title}"`)
+
+    const common = { release: best, title: book.title, author: book.author, cover: book.cover, mediaType, libraryId: payload.libraryId }
+    const release = { ...best, indexer: user.isAdminOrUp ? best.indexer : null }
+    if (user.canDiscoveryDownload) {
+      return { download: await this.submitDownload({ ...common, userId: user.id }), release }
+    }
+    if (user.canDiscoveryRequest) {
+      return { request: await this.createRequest({ ...common, user }), release }
+    }
+    throw new Error('You do not have permission to download or request books')
   }
 
   /**
@@ -140,13 +199,7 @@ class DiscoveryManager {
     })
 
     // Create a task for the global task list (transient - not restored after restart)
-    const task = TaskManager.createAndAddTask(
-      'download-audiobook',
-      { text: 'Downloading audiobook', key: 'MessageDownloadingAudiobook' },
-      { text: `Downloading "${download.title}".`, key: 'MessageTaskDownloadingAudiobookDescription', subs: [download.title] },
-      false,
-      { libraryId }
-    )
+    const task = TaskManager.createAndAddTask('download-audiobook', { text: 'Downloading audiobook', key: 'MessageDownloadingAudiobook' }, { text: `Downloading "${download.title}".`, key: 'MessageTaskDownloadingAudiobookDescription', subs: [download.title] }, false, { libraryId })
 
     const t = this.getTransient(download.id)
     t.preAddHashes = preAddHashes
