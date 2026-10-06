@@ -166,7 +166,7 @@ class DiscoveryController {
   }
 
   /**
-   * GET: /api/discovery/browse?categoryId=&keywords=&author=&sortBy=
+   * GET: /api/discovery/browse?categoryId=&keywords=&author=&sortBy=&limit=
    * "See all" for a shelf or genre.
    *
    * @this {import('../routers/ApiRouter')}
@@ -178,7 +178,8 @@ class DiscoveryController {
       categoryId: getQueryParamAsString(req.query, 'categoryId', '') || undefined,
       keywords: getQueryParamAsString(req.query, 'keywords', '') || undefined,
       author: getQueryParamAsString(req.query, 'author', '') || undefined,
-      sortBy: getQueryParamAsString(req.query, 'sortBy', 'BestSellers')
+      sortBy: getQueryParamAsString(req.query, 'sortBy', 'BestSellers'),
+      limit: Math.min(50, Math.max(1, parseInt(getQueryParamAsString(req.query, 'limit', '50'), 10) || 50))
     }
     if (opts.categoryId && !/^\d+$/.test(opts.categoryId)) {
       return res.status(400).json({ error: 'Invalid categoryId' })

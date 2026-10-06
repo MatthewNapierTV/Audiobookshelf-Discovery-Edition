@@ -66,7 +66,7 @@
                 <home-hero v-if="heroBooks.length" :books="heroBooks" compact :can-download="isEnabled && canDownload" :can-request="isEnabled && canRequest" :busy-key="requestingKey" class="mb-6" @request="requestBook" @open-book="openBook" @toggle-wishlist="toggleWishlist" />
 
                 <!-- Genre chips -->
-                <div v-if="genres.length" class="flex gap-2 overflow-x-auto pb-2 mb-6">
+                <div v-if="genres.length" v-drag-scroll class="flex gap-2 overflow-x-auto no-scroll pb-2 mb-6">
                   <button v-for="genre in genres" :key="genre.id" type="button" class="shrink-0 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-sm text-gray-200 whitespace-nowrap" @click="openGenre(genre)">{{ genre.name }}</button>
                 </div>
 
@@ -269,7 +269,7 @@ export default {
     async requestBook(book) {
       this.requestingKey = book.asin || book.id
       try {
-        const data = await this.$axios.$post('/api/discovery/grab', { book: { title: book.title, author: book.author, cover: book.cover }, mediaType: book.format === 'ebook' ? 'ebook' : 'audiobook', libraryId: this.currentLibraryId })
+        const data = await this.$axios.$post('/api/discovery/grab', { book: { title: book.title, author: book.author, cover: book.coverLarge || book.cover }, mediaType: book.format === 'ebook' ? 'ebook' : 'audiobook', libraryId: this.currentLibraryId })
         let status = 'requested'
         if (data.download || data.request?.status === 'approved') {
           status = 'downloading'

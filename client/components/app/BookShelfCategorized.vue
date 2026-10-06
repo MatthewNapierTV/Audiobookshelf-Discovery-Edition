@@ -173,6 +173,7 @@ export default {
         await this.fetchCategories()
       }
       this.loaded = true
+      this.$eventBus.$emit('bookshelf-categorized-loaded')
     },
     async fetchCategories() {
       // Sets the limit for the number of items to be displayed based on the viewport width.

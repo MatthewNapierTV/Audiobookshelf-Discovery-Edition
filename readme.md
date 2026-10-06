@@ -18,7 +18,7 @@ Designed around what makes Netflix, Audible, Apple Books and Jellyfin easy to us
 
 | Pattern | Why it works | In Faithnet Reads |
 |---|---|---|
-| **Showcase reel** | A single, striking starting point cuts decision fatigue | Full-width banner cycling through the most highly rated and newest books (tagged *New release*, *Top rated*, *Best seller*) with artwork, blurb, year · rating · length · genre and **Request** / Get, sample, details and ♥ Want to Read |
+| **Showcase reel** | A single, striking starting point cuts decision fatigue | Full-width banner cycling through the most highly rated and newest books (tagged *New release*, *Top rated*, *Best seller*): the cover on the left; title, year · rating · length · genre, blurb and **Request** / Get, sample, details and ♥ Want to Read on the right. Swipe it on phones |
 | **Stacked themed rows** | Grouped carousels are easy to scan | Continue Listening/Reading, then online rows interleaved with your library's own rows |
 | **Top 10 with big numerals** | Rank numbers draw the eye to what's popular | *Top 10 audiobooks today* from the Audible chart |
 | **"Because you…" rows** | Personal context makes recommendations trustworthy | *Because you have <author>*, *Continue your series* |
@@ -26,6 +26,9 @@ Designed around what makes Netflix, Audible, Apple Books and Jellyfin easy to us
 | **Samples** | Hearing the narrator is a top reason people pick an audiobook | **Listen to sample** in the details sheet (Audible) |
 | **Reading goals & streaks** | Small daily goals build the habit (Apple Books / Kindle) | Daily goal ring (listening + reading minutes), streak and the last 7 days — on **Your Stats** |
 | **Requests that don't give up** | *arr-style "wanted" lists: ask once, get it when it exists | **Request** any book; if it isn't on your indexers yet the request stays open (*Searching*) and is re-checked every 6 hours, then downloaded automatically |
+| **Drag to browse** | Rows that move under your finger feel like a real app | Every row swipes on touch and can be grabbed and dragged with the mouse (with a little glide) |
+| **One search for everything** | People search for a title before they know if they own it | The search bar shows your library matches *and* **Not in your library** results from the store, each one a tap away from Request |
+| **Books that look right** | A downloaded book should look like it did in the store | Getting a book saves the store's cover as its cover, and fills in author photos and bios from Wikipedia (free-licensed Wikimedia Commons images), falling back to Audible's author page |
 | **Genres everywhere** | Browsing by mood/genre is how most people discover | Genre rows (incl. Religion & Spirituality), ordered by what you read most; every genre on the Discovery page |
 
 **Online sources** (no accounts or keys needed, cached for a few hours, each one fails independently):

@@ -11,6 +11,7 @@ const { getInfoHashFromMagnet } = require('../utils/qbittorrent')
 const LibraryScanner = require('../scanner/LibraryScanner')
 const TaskManager = require('./TaskManager')
 const DiscoveryStorefront = require('./DiscoveryStorefront')
+const DiscoveryArtwork = require('./DiscoveryArtwork')
 const { rankReleases, cleanTitle, primaryAuthorSurname } = require('../utils/discoveryReleaseScorer')
 
 const { sanitizeFilename, filePathToPOSIX } = require('../utils/fileUtils')
@@ -43,6 +44,7 @@ class DiscoveryManager {
     /** @type {Set<string>} download ids currently importing (in-process re-entry guard) */
     this.importing = new Set()
     this.storefront = new DiscoveryStorefront()
+    this.artwork = new DiscoveryArtwork()
   }
 
   get settings() {
@@ -369,11 +371,15 @@ class DiscoveryManager {
         await fs.copy(sourcePath, filePathToPOSIX(Path.join(destFolder, Path.basename(sourcePath))), { overwrite: false, errorOnExist: false })
       }
 
+      // Use the cover the book had in the store, so it looks the same on the shelf
+      await this.artwork.saveCatalogCover(d.cover, destFolder)
+
       Logger.info(`[DiscoveryManager] Imported "${d.title}" into "${destFolder}" - scanning library`)
 
-      // Scan the library so the new item enters the catalogue (independent of the watcher)
-      LibraryScanner.scan(library).catch((error) => {
-        Logger.error(`[DiscoveryManager] Library scan after import failed`, error)
+      // Scan the library so the new item enters the catalogue (independent of the watcher),
+      // then fill in photos/bios for its authors
+      this.artwork.afterImport(LibraryScanner, library, destFolder).catch((error) => {
+        Logger.error(`[DiscoveryManager] Library scan / author photos after import failed`, error)
       })
 
       d.progress = 1

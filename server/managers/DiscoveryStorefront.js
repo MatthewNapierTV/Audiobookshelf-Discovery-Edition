@@ -368,7 +368,7 @@ class DiscoveryStorefront {
   async browse(user, opts) {
     const allowedSorts = ['BestSellers', '-ReleaseDate', 'AvgRating', 'Relevance']
     const sortBy = allowedSorts.includes(opts.sortBy) ? opts.sortBy : 'BestSellers'
-    const [snapshot, inFlight, books] = await Promise.all([this.getLibrarySnapshot(user), this.getInFlight(), this.catalog.getProducts({ categoryId: opts.categoryId, keywords: opts.keywords, author: opts.author, sortBy, num: 50 })])
+    const [snapshot, inFlight, books] = await Promise.all([this.getLibrarySnapshot(user), this.getInFlight(), this.catalog.getProducts({ categoryId: opts.categoryId, keywords: opts.keywords, author: opts.author, sortBy, num: opts.limit || 50 })])
     return this.annotate(books, snapshot, inFlight)
   }
 }

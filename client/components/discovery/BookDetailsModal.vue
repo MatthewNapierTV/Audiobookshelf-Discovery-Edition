@@ -7,8 +7,10 @@
           <img :src="display.cover" class="w-full h-full object-cover blur-2xl opacity-30 scale-125" alt="" />
         </div>
         <div class="relative flex flex-col sm:flex-row p-6 gap-6">
-          <div class="w-40 h-40 sm:w-48 sm:h-48 shrink-0 mx-auto sm:mx-0 rounded-md overflow-hidden shadow-xl bg-primary/40">
-            <img v-if="display.cover" :src="display.cover" class="w-full h-full object-cover" :alt="display.title" />
+          <div class="w-40 sm:w-52 shrink-0 mx-auto sm:mx-0 sm:self-start sm:sticky sm:top-6">
+            <div class="rounded-md overflow-hidden shadow-xl bg-primary/40" :class="{ 'aspect-square': !display.cover }">
+              <img v-if="display.cover" :src="display.coverLarge || display.cover" class="w-full h-auto block" :alt="display.title" />
+            </div>
           </div>
           <div class="min-w-0 grow">
             <p v-if="sourceLabel" class="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-brand mb-1">{{ sourceLabel }}</p>
@@ -61,14 +63,15 @@
               <p v-if="lastError" class="text-xs text-error mt-2">{{ lastError }}</p>
               <p v-if="processing" class="text-xs text-gray-400 mt-2">{{ $strings.MessageDiscoverySearchingIndexers }}</p>
             </div>
+
+            <!-- Description sits beside the cover, under the title and actions -->
+            <div v-if="display.description" class="mt-6 pt-5 border-t border-white/10">
+              <h3 class="text-sm font-semibold text-gray-200 mb-1">{{ $strings.LabelDescription }}</h3>
+              <p class="text-sm text-gray-300 whitespace-pre-line leading-relaxed">{{ display.description }}</p>
+            </div>
+            <p v-else-if="loadingDetails" class="mt-6 text-sm text-gray-500">{{ $strings.MessageLoading || 'Loading…' }}</p>
           </div>
         </div>
-      </div>
-
-      <div v-if="loadingDetails && !display.description" class="px-6 pb-6 text-sm text-gray-500">{{ $strings.MessageLoading || 'Loading…' }}</div>
-      <div v-if="display.description" class="px-6 pb-6">
-        <h3 class="text-sm font-semibold text-gray-200 mb-1">{{ $strings.LabelDescription }}</h3>
-        <p class="text-sm text-gray-300 whitespace-pre-line leading-relaxed">{{ display.description }}</p>
       </div>
     </div>
   </modals-modal>
@@ -143,7 +146,7 @@ export default {
       this.processing = true
       this.lastError = null
       const payload = {
-        book: { title: this.book.title, author: this.book.author, cover: this.book.cover },
+        book: { title: this.book.title, author: this.book.author, cover: this.display.coverLarge || this.display.cover },
         mediaType,
         libraryId: this.libraryId
       }

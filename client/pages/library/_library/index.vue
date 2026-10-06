@@ -58,7 +58,8 @@ export default {
       canRequest: false,
       downloadsEnabled: true,
       showBookModal: false,
-      modalBook: null
+      modalBook: null,
+      shelvesLoaded: false
     }
   },
   computed: {
@@ -141,7 +142,7 @@ export default {
       const key = book.asin || book.id
       this.requestingKey = key
       try {
-        const data = await this.$axios.$post('/api/discovery/grab', { book: { title: book.title, author: book.author, cover: book.cover }, mediaType: book.format === 'ebook' ? 'ebook' : 'audiobook', libraryId: this.libraryId })
+        const data = await this.$axios.$post('/api/discovery/grab', { book: { title: book.title, author: book.author, cover: book.coverLarge || book.cover }, mediaType: book.format === 'ebook' ? 'ebook' : 'audiobook', libraryId: this.libraryId })
         let status = 'requested'
         if (data.download) {
           status = 'downloading'
@@ -162,6 +163,14 @@ export default {
         this.requestingKey = null
       }
     },
+    onShelvesLoaded() {
+      this.shelvesLoaded = true
+      this.signalReady()
+    },
+    /** Tell the layout the home screen has its content, so the splash can fade out */
+    signalReady() {
+      if (this.shelvesLoaded && (this.storefrontLoaded || !this.isBookLibrary)) this.$eventBus.$emit('home-ready')
+    },
     seeAll(shelf) {
       if (!shelf.browse) return
       this.$router.push({ path: `/library/${this.libraryId}/discovery`, query: { ...shelf.browse, title: shelf.title } })
@@ -181,9 +190,14 @@ export default {
       this.canDownload = !!(config?.enabled && config?.canDownload)
       this.canRequest = !!(config?.enabled && config?.canRequest)
       this.storefrontLoaded = true
+      this.signalReady()
     }
   },
+  beforeDestroy() {
+    this.$eventBus.$off('bookshelf-categorized-loaded', this.onShelvesLoaded)
+  },
   mounted() {
+    this.$eventBus.$on('bookshelf-categorized-loaded', this.onShelvesLoaded)
     if (this.isBookLibrary) {
       this.$store.dispatch('wishlist/load')
       this.loadStorefront()

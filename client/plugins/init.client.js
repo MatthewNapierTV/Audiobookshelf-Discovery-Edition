@@ -1,10 +1,12 @@
 import Vue from 'vue'
 import Path from 'path'
 import vClickOutside from 'v-click-outside'
+import dragScroll from '@/directives/dragScroll'
 import { formatDistance, format, addDays, isDate, setDefaultOptions } from 'date-fns'
 import * as locale from 'date-fns/locale'
 
 Vue.directive('click-outside', vClickOutside.directive)
+Vue.directive('drag-scroll', dragScroll)
 
 Vue.prototype.$setDateFnsLocale = (localeString) => {
   if (!locale[localeString]) return 0

@@ -17,7 +17,7 @@
         <li v-else-if="isFetching" class="py-2 px-2">
           <p>{{ $strings.MessageFetching }}</p>
         </li>
-        <li v-else-if="!totalResults" class="py-2 px-2">
+        <li v-else-if="!totalResults && !storeResults.length && !storeFetching" class="py-2 px-2">
           <p>{{ $strings.MessageNoResults }}</p>
         </li>
         <template v-else>
@@ -92,6 +92,30 @@
               </nuxt-link>
             </li>
           </template>
+
+          <!-- Books you don't own yet, from the online catalog -->
+          <template v-if="showStore">
+            <div class="flex items-center mb-1 mt-3 px-1" :class="{ 'mt-1!': !totalResults }">
+              <p class="uppercase text-xs text-brand font-semibold">{{ $strings.HeaderNotInYourLibrary }}</p>
+              <span v-if="storeFetching" class="material-symbols text-sm text-gray-400 animate-spin ml-2">progress_activity</span>
+            </div>
+            <li v-if="storeFetching && !storeResults.length" class="py-1.5 px-2 text-xs text-gray-400">{{ $strings.MessageSearchingStore }}</li>
+            <li v-else-if="!storeResults.length" class="py-1.5 px-2 text-xs text-gray-400">{{ $strings.MessageNoStoreResults }}</li>
+            <li v-for="book in storeResults" :key="'store.' + (book.asin || book.id)" class="text-gray-50 select-none relative cursor-pointer hover:bg-white/10 rounded-lg py-1 px-1" role="option" @click="openStoreBook(book)">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 shrink-0 rounded-md overflow-hidden bg-surface-3">
+                  <img v-if="book.cover" :src="book.cover" loading="lazy" class="w-full h-full object-cover" alt="" />
+                </div>
+                <div class="min-w-0 grow">
+                  <p class="text-sm truncate">{{ book.title }}</p>
+                  <p class="text-xs text-gray-400 truncate">{{ book.author }}</p>
+                </div>
+                <span v-if="book.status === 'downloading' || book.status === 'requested'" class="material-symbols text-base text-info shrink-0">{{ book.status === 'downloading' ? 'downloading' : 'schedule' }}</span>
+                <span v-else class="material-symbols text-lg text-gray-400 shrink-0">add_circle</span>
+              </div>
+            </li>
+            <li v-if="storeResults.length" class="select-none cursor-pointer text-xs text-brand hover:text-white px-2 pt-2 pb-1 flex items-center" role="option" @click="seeAllInStore">{{ $strings.ButtonSeeAllInDiscover }}<span class="material-symbols text-sm">chevron_right</span></li>
+          </template>
         </template>
       </ul>
     </div>
@@ -117,12 +141,18 @@ export default {
       genreResults: [],
       narratorResults: [],
       searchTimeout: null,
-      lastSearch: null
+      lastSearch: null,
+      storeResults: [],
+      storeFetching: false
     }
   },
   computed: {
     currentLibraryId() {
       return this.$store.state.libraries.currentLibraryId
+    },
+    /** Only book libraries get store results (the catalogs are book catalogs) */
+    showStore() {
+      return this.$store.getters['libraries/getCurrentLibraryMediaType'] === 'book' && !!this.lastSearch
     },
     totalResults() {
       return this.bookResults.length + this.seriesResults.length + this.authorResults.length + this.tagResults.length + this.genreResults.length + this.podcastResults.length + this.narratorResults.length + this.episodeResults.length
@@ -131,6 +161,28 @@ export default {
   methods: {
     clickOption() {
       this.clearResults()
+    },
+    openStoreBook(book) {
+      this.clearResults()
+      this.$eventBus.$emit('open-store-book', book)
+    },
+    seeAllInStore() {
+      const keywords = this.lastSearch
+      this.clearResults()
+      this.$router.push({ path: `/library/${this.currentLibraryId}/discovery`, query: { keywords, sortBy: 'Relevance', title: this.$getString('HeaderStoreResultsFor', [keywords]) } })
+    },
+    async runStoreSearch(value) {
+      this.storeResults = []
+      if (this.$store.getters['libraries/getCurrentLibraryMediaType'] !== 'book') return
+      this.storeFetching = true
+      const data = await this.$axios.$get(`/api/discovery/browse?${new URLSearchParams({ keywords: value, sortBy: 'Relevance', limit: '12' }).toString()}`).catch((error) => {
+        console.error('Store search error', error)
+        return null
+      })
+      // A newer search (or a clear) replaced this one
+      if (this.lastSearch !== value) return
+      this.storeResults = (data?.books || []).filter((b) => b.status !== 'owned').slice(0, 5)
+      this.storeFetching = false
     },
     submitSearch() {
       if (!this.search) return
@@ -149,6 +201,8 @@ export default {
       this.tagResults = []
       this.genreResults = []
       this.narratorResults = []
+      this.storeResults = []
+      this.storeFetching = false
       this.showMenu = false
       this.isFetching = false
       this.isTyping = false
@@ -176,6 +230,7 @@ export default {
         return
       }
       this.isFetching = true
+      this.runStoreSearch(value)
 
       const searchResults = await this.$axios.$get(`/api/libraries/${this.currentLibraryId}/search?q=${encodeURIComponent(value)}&limit=3`).catch((error) => {
         console.error('Search error', error)

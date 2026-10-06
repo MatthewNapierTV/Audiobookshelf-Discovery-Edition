@@ -39,6 +39,9 @@ module.exports = {
     base: routerBasePath
   },
 
+  // Branded splash (logo + spinning ring) shown from first paint while the app boots
+  loadingIndicator: '~/loading.html',
+
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: ['@/assets/tailwind.css', '@/assets/app.css'],
 

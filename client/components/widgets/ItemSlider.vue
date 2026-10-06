@@ -10,7 +10,7 @@
         <span class="material-symbols" :style="{ fontSize: 1.5 + 'em' }">chevron_right</span>
       </button>
     </div>
-    <div cy-id="slider" ref="slider" class="w-full overflow-y-hidden overflow-x-auto no-scroll" style="scroll-behavior: smooth" @scroll="scrolled">
+    <div cy-id="slider" ref="slider" v-drag-scroll class="w-full overflow-y-hidden overflow-x-auto no-scroll" style="scroll-behavior: smooth" @scroll="scrolled">
       <div class="flex space-x-5e pt-2e pb-1e">
         <template v-for="(item, index) in items">
           <div cy-id="item" ref="item" :key="itemKeyFunc(item)">

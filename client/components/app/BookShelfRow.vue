@@ -1,6 +1,6 @@
 <template>
   <div class="relative">
-    <div ref="shelf" class="w-full max-w-full bookshelf-row categorizedBookshelfRow relative overflow-x-scroll no-scroll overflow-y-hidden z-10" :style="{ paddingLeft: paddingLeft + 'em' }" @scroll="scrolled">
+    <div ref="shelf" v-drag-scroll class="w-full max-w-full bookshelf-row categorizedBookshelfRow relative overflow-x-scroll no-scroll overflow-y-hidden z-10" :style="{ paddingLeft: paddingLeft + 'em' }" @scroll="scrolled">
       <div class="w-full h-full pt-6e">
         <div v-if="shelf.type === 'book' || shelf.type === 'podcast'" class="flex items-center">
           <template v-for="(entity, index) in shelf.entities">

@@ -23,6 +23,10 @@
     <modals-share-modal />
     <prompt-confirm />
     <readers-reader />
+    <discovery-global-book-details />
+
+    <!-- First load: logo + ring until the home screen has its content -->
+    <app-splash-screen :show="showSplash" :message="splashMessage" />
   </div>
 </template>
 
@@ -37,6 +41,8 @@ export default {
       isFirstSocketConnection: true,
       socketConnectionToastId: null,
       currentLang: null,
+      showSplash: true,
+      splashMessage: '',
       multiSessionOtherSessionId: null, // Used for multiple sessions open warning toast
       multiSessionCurrentSessionId: null // Used for multiple sessions open warning toast
     }
@@ -81,6 +87,25 @@ export default {
         document.body.classList.remove('no-bars', 'app-bar-and-toolbar')
         document.body.classList.add('app-bar')
       }
+    },
+    /**
+     * Keep the splash (started by client/loading.html before boot) up until the page has content.
+     * The library home screen signals 'home-ready' once its rows and showcase are loaded; any other
+     * page is ready as soon as it's mounted. Never hold it longer than 12s.
+     */
+    initSplash() {
+      const hide = () => {
+        if (!this.showSplash) return
+        this.showSplash = false
+        this.$eventBus.$off('home-ready', hide)
+        clearTimeout(this.splashTimeout)
+        clearTimeout(this.splashSlowTimeout)
+      }
+      this.$eventBus.$on('home-ready', hide)
+      this.splashSlowTimeout = setTimeout(() => (this.splashMessage = this.$strings.MessageSplashGettingReady), 3500)
+      this.splashTimeout = setTimeout(hide, 12000)
+      const isHome = this.$route.name === 'library-library' || this.$route.name === 'index'
+      if (!isHome) this.$nextTick(hide)
     },
     tokenRefreshed(newAccessToken) {
       if (this.isSocketConnected && !this.isSocketAuthenticated) {
@@ -613,6 +638,8 @@ export default {
     window.addEventListener('keydown', this.keyDown)
 
     this.$store.dispatch('libraries/load')
+
+    this.initSplash()
 
     this.initLocalStorage()
 

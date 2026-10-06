@@ -9,7 +9,7 @@
       </div>
       <button v-if="shelf.browse" type="button" class="ml-auto shrink-0 text-gray-300 hover:text-white flex items-center" :style="{ fontSize: 0.85 + 'em' }" @click="$emit('see-all', shelf)">{{ $strings.ButtonDiscoverySeeAll }}<span class="material-symbols text-base">chevron_right</span></button>
     </div>
-    <div class="flex overflow-x-auto no-scroll pb-2 pt-2 pr-8e scroll-smooth snap-x">
+    <div v-drag-scroll class="flex overflow-x-auto no-scroll pb-2 pt-2 pr-8e scroll-smooth snap-x">
       <button v-for="(book, i) in shelf.books" :key="book.asin || book.id" type="button" class="top10-item abs-card group shrink-0 flex items-end snap-start text-left" :style="{ height: cover + 'px' }" @click="$emit('select', book)">
         <span class="top10-rank" :class="{ 'top10-rank-wide': i === 9 }" :style="{ fontSize: cover * 0.95 + 'px' }" aria-hidden="true">{{ i + 1 }}</span>
         <div class="abs-card-cover relative overflow-hidden rounded-[0.6em] bg-surface-3 -ml-[0.18em]" :style="{ width: cover * 0.82 + 'px', height: cover + 'px' }">

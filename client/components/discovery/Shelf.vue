@@ -12,7 +12,7 @@
       <button v-show="canScrollLeft" type="button" class="hidden md:flex absolute left-0 top-0 z-10 items-center justify-center w-10 bg-linear-to-r from-bg to-transparent opacity-0 group-hover/shelf:opacity-100 transition-opacity" :style="{ height: cardWidth + 'px' }" :aria-label="$strings.ButtonPrevious" @click="scrollBy(-1)">
         <span class="material-symbols text-4xl">chevron_left</span>
       </button>
-      <div ref="scroller" class="flex gap-4 overflow-x-auto pb-2 px-1 scroll-smooth snap-x discovery-shelf-scroller" @scroll="updateArrows">
+      <div ref="scroller" v-drag-scroll class="flex gap-4 overflow-x-auto pb-2 px-1 scroll-smooth snap-x discovery-shelf-scroller" @scroll="updateArrows">
         <discovery-book-card v-for="(book, index) in shelf.books" :key="book.asin || book.id || index" :book="book" :width="cardWidth" :rank="shelf.ranked ? index + 1 : null" class="snap-start" @select="(b) => $emit('select', b)" />
       </div>
       <button v-show="canScrollRight" type="button" class="hidden md:flex absolute right-0 top-0 z-10 items-center justify-center w-10 bg-linear-to-l from-bg to-transparent opacity-0 group-hover/shelf:opacity-100 transition-opacity" :style="{ height: cardWidth + 'px' }" :aria-label="$strings.ButtonNext" @click="scrollBy(1)">
