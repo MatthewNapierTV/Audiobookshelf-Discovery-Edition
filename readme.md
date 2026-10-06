@@ -18,7 +18,7 @@ Designed around what makes Netflix, Audible, Apple Books and Jellyfin easy to us
 
 | Pattern | Why it works | In Faithnet Reads |
 |---|---|---|
-| **Showcase reel** | A single, striking starting point cuts decision fatigue | Full-width banner cycling through the most highly rated and newest books (tagged *New release*, *Top rated*, *Best seller*): the cover on the left; title, year · rating · length · genre, blurb and **Request** / Get, sample, details and ♥ Want to Read on the right. Swipe it on phones |
+| **Showcase reel** | A single, striking starting point cuts decision fatigue | Full-width banner cycling through the most highly rated and newest books (tagged *New release*, *Top rated*, *Best seller*) with the artwork, blurb, year · rating · length · genre and **Request** / Get, sample, details and ♥ Want to Read. On portrait screens the cover fills the banner; swipe it on phones |
 | **Stacked themed rows** | Grouped carousels are easy to scan | Continue Listening/Reading, then online rows interleaved with your library's own rows |
 | **Top 10 with big numerals** | Rank numbers draw the eye to what's popular | *Top 10 audiobooks today* from the Audible chart |
 | **"Because you…" rows** | Personal context makes recommendations trustworthy | *Because you have <author>*, *Continue your series* |

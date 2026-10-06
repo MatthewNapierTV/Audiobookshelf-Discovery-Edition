@@ -1,20 +1,19 @@
 <template>
-  <modals-modal v-model="show" name="discovery-book" :width="760" :height="'unset'" :processing="processing">
-    <div v-if="book" class="w-full rounded-2xl bg-surface-2 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)] border border-white/10 overflow-y-auto overflow-x-hidden" style="max-height: 85vh">
-      <!-- Blurred cover backdrop, Audible product page style -->
-      <div class="relative">
-        <div v-if="display.cover" class="absolute inset-0 overflow-hidden">
-          <img :src="display.cover" class="w-full h-full object-cover blur-2xl opacity-30 scale-125" alt="" />
-        </div>
-        <div class="relative flex flex-col sm:flex-row p-6 gap-6">
-          <div class="w-40 sm:w-52 shrink-0 mx-auto sm:mx-0 sm:self-start sm:sticky sm:top-6">
-            <div class="rounded-md overflow-hidden shadow-xl bg-primary/40" :class="{ 'aspect-square': !display.cover }">
-              <img v-if="display.cover" :src="display.coverLarge || display.cover" class="w-full h-auto block" :alt="display.title" />
-            </div>
-          </div>
-          <div class="min-w-0 grow">
+  <modals-modal v-model="show" name="discovery-book" :width="1080" :height="'unset'" :processing="processing">
+    <div v-if="book" class="details-sheet w-full rounded-2xl bg-surface-2 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)] border border-white/10 overflow-hidden">
+      <!-- Left: the cover, edge to edge, shaped like the book (square audiobook art, tall ebook covers) -->
+      <div class="details-cover" :style="{ '--cover-ratio': coverRatio }">
+        <img v-if="coverSrc" :src="coverSrc" class="absolute inset-0 w-full h-full object-cover" :alt="display.title" @load="onCoverLoad" />
+        <div v-else class="absolute inset-0 flex items-center justify-center p-6 text-center text-xl font-semibold text-gray-300 bg-surface-3">{{ display.title }}</div>
+      </div>
+
+      <!-- Right: everything about it -->
+      <div class="details-info">
+        <img v-if="coverSrc" :src="coverSrc" class="details-info-tint" alt="" aria-hidden="true" />
+        <div class="relative p-6 sm:p-8">
+          <div class="min-w-0">
             <p v-if="sourceLabel" class="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-brand mb-1">{{ sourceLabel }}</p>
-            <h2 class="text-2xl font-bold tracking-tight leading-tight">{{ display.title }}</h2>
+            <h2 class="text-2xl sm:text-3xl font-bold tracking-tight leading-tight">{{ display.title }}</h2>
             <p v-if="display.subtitle" class="text-sm text-gray-300 mt-0.5">{{ display.subtitle }}</p>
             <p class="text-sm text-gray-200 mt-2">{{ $getString('LabelByAuthor', [display.author || $strings.LabelUnknown]) }}</p>
             <p v-if="display.narrator" class="text-xs text-gray-400">{{ $strings.LabelNarrators }}: {{ display.narrator }}</p>
@@ -94,11 +93,13 @@ export default {
       lastError: null,
       details: null,
       loadingDetails: false,
-      samplePlaying: false
+      samplePlaying: false,
+      coverRatio: 1
     }
   },
   watch: {
     book() {
+      this.coverRatio = 1
       this.lastError = null
       this.details = null
       this.stopSample()
@@ -126,6 +127,9 @@ export default {
         if (merged[key] === null || merged[key] === undefined || merged[key] === '' || merged[key] === 0 || (Array.isArray(merged[key]) && !merged[key].length)) merged[key] = this.details[key]
       }
       return merged
+    },
+    coverSrc() {
+      return this.display.coverLarge || this.display.cover || null
     },
     seriesText() {
       return (this.display?.series || []).map((s) => (s.sequence ? `${s.series} #${s.sequence}` : s.series)).join(', ')
@@ -196,6 +200,11 @@ export default {
         this.$toast.error(this.$strings.ToastFailedToUpdate)
       }
     },
+    /** Shape the cover panel like the actual art (kept between a tall ebook cover and a square audiobook cover) */
+    onCoverLoad(e) {
+      const { naturalWidth: w, naturalHeight: h } = e.target
+      if (w && h) this.coverRatio = Math.min(1, Math.max(0.62, w / h))
+    },
     toggleSample() {
       const audio = this.$refs.sample
       if (!audio) return
@@ -216,6 +225,62 @@ export default {
 </script>
 
 <style scoped>
+.details-sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+.details-cover {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  aspect-ratio: var(--cover-ratio, 1);
+  max-height: 62vh;
+  background: #1a1d24;
+}
+.details-info {
+  position: relative;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.details-info-tint {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(48px) saturate(140%);
+  opacity: 0.22;
+  transform: scale(1.3);
+  pointer-events: none;
+}
+@media (min-width: 640px) {
+  .details-sheet {
+    flex-direction: row;
+    height: min(86vh, 36rem);
+    overflow: hidden;
+  }
+  .details-cover {
+    width: auto;
+    height: 100%;
+    max-height: none;
+    max-width: 50%;
+  }
+  .details-cover::after {
+    /* soft seam into the info side */
+    content: '';
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 3rem;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.25));
+    pointer-events: none;
+  }
+  .details-info {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+}
 .details-chip {
   display: inline-flex;
   align-items: center;

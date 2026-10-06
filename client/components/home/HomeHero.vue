@@ -1,61 +1,57 @@
 <template>
   <section v-if="books.length" class="showcase relative w-full overflow-hidden select-none" :class="{ 'is-compact': compact }" aria-roledescription="carousel" :aria-label="$strings.HeaderShowcase" @mouseenter="paused = true" @mouseleave="paused = false" @touchstart.passive="touchStart" @touchend="touchEnd" @touchcancel="touch = null">
-    <!-- Backdrop: the cover blown up and blurred into an ambient wash -->
+    <!-- Art: blurred full-bleed fill + sharp artwork fading in from the right -->
     <transition-group name="showcase-fade" tag="div" class="absolute inset-0">
       <div v-for="(book, i) in books" v-show="i === index" :key="keyFor(book)" class="absolute inset-0">
-        <div class="showcase-fill" :class="{ 'is-active': i === index }" :style="{ backgroundImage: `url(&quot;${artFor(book)}&quot;)` }" />
+        <div class="showcase-fill" :style="{ backgroundImage: `url(&quot;${artFor(book)}&quot;)` }" />
+        <img :src="artFor(book)" alt="" class="showcase-art" :class="{ 'is-active': i === index }" />
       </div>
     </transition-group>
     <div class="showcase-shade absolute inset-0" />
 
-    <!-- Cover on the left, title / details / description on the right -->
-    <div class="showcase-body relative h-full flex items-center pl-8e pr-8e">
+    <!-- Copy -->
+    <div class="showcase-body relative h-full flex items-end pl-8e pr-8e">
       <transition name="showcase-copy" mode="out-in">
-        <div :key="keyFor(current)" class="showcase-slide">
-          <button type="button" class="showcase-cover" :aria-label="$strings.ButtonDiscoveryViewDetails" @click="$emit('open-book', current)">
-            <img :src="artFor(current)" :alt="current.title" />
-          </button>
-          <div class="showcase-copy min-w-0">
-            <p class="showcase-tag" :class="`is-${current.showcase || 'new'}`">
-              <span class="material-symbols fill text-[1.05em]">{{ tagIcon }}</span
-              >{{ tagText }}
-            </p>
-            <h1 class="showcase-title">{{ current.title }}</h1>
-            <p v-if="current.author" class="mt-1.5 text-[1.05rem] md:text-lg text-gray-200">
-              {{ $getString('LabelByAuthor', [current.author]) }}<span v-if="current.narrator" class="text-gray-400"> · {{ $strings.LabelNarrators }}: {{ current.narrator }}</span>
-            </p>
+        <div :key="keyFor(current)" class="w-full max-w-[44rem]">
+          <p class="showcase-tag" :class="`is-${current.showcase || 'new'}`">
+            <span class="material-symbols fill text-[1.05em]">{{ tagIcon }}</span
+            >{{ tagText }}
+          </p>
+          <h1 class="showcase-title">{{ current.title }}</h1>
+          <p v-if="current.author" class="mt-1.5 text-[1.05rem] md:text-lg text-gray-200">
+            {{ $getString('LabelByAuthor', [current.author]) }}<span v-if="current.narrator" class="text-gray-400"> · {{ $strings.LabelNarrators }}: {{ current.narrator }}</span>
+          </p>
 
-            <div class="showcase-rule" />
-            <div class="showcase-meta">
-              <span v-for="(m, i) in meta" :key="i" class="showcase-meta-item" :class="{ 'is-wide': m.wide }">
-                <span v-if="m.icon" class="material-symbols fill text-[1.1em] text-yellow-400 -mt-px">{{ m.icon }}</span
-                >{{ m.text }}
-              </span>
-            </div>
-            <p v-if="current.description" class="showcase-desc">{{ current.description }}</p>
+          <div class="showcase-rule" />
+          <div class="showcase-meta">
+            <span v-for="(m, i) in meta" :key="i" class="showcase-meta-item" :class="{ 'is-wide': m.wide }">
+              <span v-if="m.icon" class="material-symbols fill text-[1.1em] text-yellow-400 -mt-px">{{ m.icon }}</span
+              >{{ m.text }}
+            </span>
+          </div>
+          <p v-if="current.description" class="showcase-desc">{{ current.description }}</p>
 
-            <div class="mt-5 flex items-center gap-3">
-              <!-- Primary: request it (or get it directly if you're allowed to download) -->
-              <button v-if="primaryAction === 'pending'" type="button" class="showcase-primary is-done" disabled>
-                <span class="material-symbols fill text-2xl">{{ current.status === 'downloading' ? 'downloading' : 'schedule' }}</span
-                >{{ current.status === 'downloading' ? $strings.LabelDiscoveryDownloading : $strings.LabelDiscoveryRequested }}
-              </button>
-              <button v-else-if="primaryAction === 'request'" type="button" class="showcase-primary" :disabled="busy" @click="$emit('request', current)">
-                <span class="material-symbols fill text-2xl" :class="{ 'animate-spin': busy }">{{ busy ? 'progress_activity' : canDownload ? 'download' : 'add_circle' }}</span
-                >{{ canDownload ? $strings.ButtonGet : $strings.ButtonRequest }}
-              </button>
-              <button v-else type="button" class="showcase-primary" @click="$emit('open-book', current)"><span class="material-symbols fill text-2xl">menu_book</span>{{ $strings.ButtonDiscoveryViewDetails }}</button>
+          <div class="mt-5 flex items-center gap-3">
+            <!-- Primary: request it (or get it directly if you're allowed to download) -->
+            <button v-if="primaryAction === 'pending'" type="button" class="showcase-primary is-done" disabled>
+              <span class="material-symbols fill text-2xl">{{ current.status === 'downloading' ? 'downloading' : 'schedule' }}</span
+              >{{ current.status === 'downloading' ? $strings.LabelDiscoveryDownloading : $strings.LabelDiscoveryRequested }}
+            </button>
+            <button v-else-if="primaryAction === 'request'" type="button" class="showcase-primary" :disabled="busy" @click="$emit('request', current)">
+              <span class="material-symbols fill text-2xl" :class="{ 'animate-spin': busy }">{{ busy ? 'progress_activity' : canDownload ? 'download' : 'add_circle' }}</span
+              >{{ canDownload ? $strings.ButtonGet : $strings.ButtonRequest }}
+            </button>
+            <button v-else type="button" class="showcase-primary" @click="$emit('open-book', current)"><span class="material-symbols fill text-2xl">menu_book</span>{{ $strings.ButtonDiscoveryViewDetails }}</button>
 
-              <button v-if="current.sampleUrl" type="button" class="showcase-round" :class="{ 'is-on': samplePlaying }" :aria-label="samplePlaying ? $strings.ButtonPause : $strings.ButtonListenToSample" :title="$strings.ButtonListenToSample" @click="toggleSample">
-                <span class="material-symbols fill text-[1.6rem]">{{ samplePlaying ? 'pause' : 'headphones' }}</span>
-              </button>
-              <button type="button" class="showcase-round" :aria-label="$strings.ButtonDiscoveryViewDetails" @click="$emit('open-book', current)">
-                <span class="material-symbols text-[1.6rem]">info</span>
-              </button>
-              <button type="button" class="showcase-round" :class="{ 'is-on': inWishlist }" :aria-pressed="inWishlist" :aria-label="$strings.ButtonWantToRead" @click="$emit('toggle-wishlist', current)">
-                <span class="material-symbols text-[1.6rem]" :class="{ fill: inWishlist }">favorite</span>
-              </button>
-            </div>
+            <button v-if="current.sampleUrl" type="button" class="showcase-round" :class="{ 'is-on': samplePlaying }" :aria-label="samplePlaying ? $strings.ButtonPause : $strings.ButtonListenToSample" :title="$strings.ButtonListenToSample" @click="toggleSample">
+              <span class="material-symbols fill text-[1.6rem]">{{ samplePlaying ? 'pause' : 'headphones' }}</span>
+            </button>
+            <button type="button" class="showcase-round" :aria-label="$strings.ButtonDiscoveryViewDetails" @click="$emit('open-book', current)">
+              <span class="material-symbols text-[1.6rem]">info</span>
+            </button>
+            <button type="button" class="showcase-round" :class="{ 'is-on': inWishlist }" :aria-pressed="inWishlist" :aria-label="$strings.ButtonWantToRead" @click="$emit('toggle-wishlist', current)">
+              <span class="material-symbols text-[1.6rem]" :class="{ fill: inWishlist }">favorite</span>
+            </button>
           </div>
         </div>
       </transition>
@@ -213,7 +209,6 @@ export default {
   font-size: 1rem;
 }
 .showcase-body {
-  padding-top: 1.5rem;
   padding-bottom: clamp(8rem, 17vh, 10.5rem);
 }
 .showcase-dots {
@@ -243,74 +238,37 @@ export default {
   inset: -80px;
   background-size: cover;
   background-position: center;
-  filter: blur(60px) saturate(150%) brightness(0.7);
-  transform: scale(1.2);
+  filter: blur(70px) saturate(160%) brightness(0.75);
+  transform: scale(1.15);
 }
-.showcase-fill.is-active {
-  animation: showcase-drift 16s ease-out forwards;
+/* Square book art can't fill a wide banner, so it's anchored right at full height and faded into the fill */
+.showcase-art {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(72%, 100vh);
+  object-fit: cover;
+  object-position: center 30%;
+  -webkit-mask-image: linear-gradient(to left, #000 55%, transparent 100%), linear-gradient(to top, transparent 0%, #000 35%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to left, #000 55%, transparent 100%), linear-gradient(to top, transparent 0%, #000 35%);
+  mask-composite: intersect;
+  transform: scale(1.06);
 }
-@keyframes showcase-drift {
+.showcase-art.is-active {
+  animation: showcase-kenburns 14s ease-out forwards;
+}
+@keyframes showcase-kenburns {
   from {
-    transform: scale(1.3);
+    transform: scale(1.06);
   }
   to {
-    transform: scale(1.15);
+    transform: scale(1);
   }
 }
 .showcase-shade {
-  background: radial-gradient(ellipse at 20% 45%, rgba(13, 15, 19, 0) 0%, rgba(13, 15, 19, 0.35) 70%), linear-gradient(180deg, rgba(13, 15, 19, 0.45) 0%, rgba(13, 15, 19, 0.1) 22%, rgba(13, 15, 19, 0.25) 60%, #111317 100%);
-}
-.showcase-slide {
-  display: flex;
-  align-items: flex-end;
-  gap: clamp(1.25rem, 3vw, 2.75rem);
-  width: 100%;
-  max-width: 76rem;
-}
-.showcase-copy {
-  flex: 1 1 auto;
-  max-width: 46rem;
-}
-/* Real cover, shown whole (square audiobook art or portrait ebook art) */
-.showcase-cover {
-  flex: 0 0 auto;
-  display: block;
-  width: clamp(10rem, 21vw, 18.5rem);
-  border-radius: 0.6rem;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.04);
-  box-shadow:
-    0 30px 60px -18px rgba(0, 0, 0, 0.85),
-    0 0 0 1px rgba(255, 255, 255, 0.08);
-  transition: transform 0.25s ease;
-}
-.showcase-cover:hover {
-  transform: translateY(-3px);
-}
-.showcase-cover img {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: min(27rem, 48vh);
-  object-fit: cover;
-}
-.showcase.is-compact .showcase-cover {
-  width: clamp(8.5rem, 16vw, 13rem);
-}
-.showcase.is-compact .showcase-cover img {
-  max-height: min(19rem, 38vh);
-}
-@media (max-width: 639px) {
-  .showcase-slide {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .showcase-cover {
-    width: 7.5rem;
-  }
-  .showcase-cover img {
-    max-height: 11rem;
-  }
+  background: linear-gradient(90deg, rgba(13, 15, 19, 0.92) 0%, rgba(13, 15, 19, 0.7) 32%, rgba(13, 15, 19, 0.15) 62%, rgba(13, 15, 19, 0) 100%), linear-gradient(180deg, rgba(13, 15, 19, 0.35) 0%, rgba(13, 15, 19, 0) 25%, rgba(13, 15, 19, 0) 55%, #111317 100%);
 }
 .showcase-tag {
   display: inline-flex;
@@ -331,7 +289,7 @@ export default {
   color: #fca5a5;
 }
 .showcase-title {
-  font-size: clamp(1.9rem, 3.8vw, 3.5rem);
+  font-size: clamp(2.1rem, 4.6vw, 4rem);
   font-weight: 800;
   letter-spacing: -0.025em;
   line-height: 1.02;
@@ -505,6 +463,23 @@ export default {
     display: none;
   }
 }
+/* Portrait screens (phones, tablets held upright): the cover fills the whole banner, text over a fade at the bottom */
+@media (max-width: 767px), (max-aspect-ratio: 1/1) {
+  .showcase-art {
+    width: 100%;
+    height: 84%;
+    object-position: center top;
+    /* fade into the blurred copy of the same cover, so the book fills the banner without cropping it away */
+    -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+  }
+  .showcase-fill {
+    filter: blur(50px) saturate(150%) brightness(0.8);
+  }
+  .showcase-shade {
+    background: linear-gradient(180deg, rgba(13, 15, 19, 0.35) 0%, rgba(13, 15, 19, 0) 18%, rgba(13, 15, 19, 0.15) 38%, rgba(13, 15, 19, 0.82) 62%, #111317 100%);
+  }
+}
 .showcase-fade-enter-active,
 .showcase-fade-leave-active {
   transition: opacity 0.9s ease;
@@ -528,7 +503,7 @@ export default {
   transform: translateY(-6px);
 }
 @media (prefers-reduced-motion: reduce) {
-  .showcase-fill.is-active {
+  .showcase-art.is-active {
     animation: none;
   }
   .showcase-copy-enter-active,
