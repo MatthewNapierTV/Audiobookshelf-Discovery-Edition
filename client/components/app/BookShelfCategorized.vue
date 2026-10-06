@@ -17,7 +17,7 @@
       <p class="text-center text-xl py-4">{{ $strings.MessageBookshelfNoResultsForQuery }}</p>
     </div>
     <!-- Alternate plain view -->
-    <div v-if="homeFeed || (isAlternativeBookshelfView && !(loaded && !shelves.length && !search))" class="w-full mb-24e">
+    <div v-if="homeFeed || (isAlternativeBookshelfView && !(loaded && !shelves.length && !search))" class="w-full mb-24e" :class="{ 'relative z-10': homeFeed }">
       <slot name="before-shelves" :shelves="supportedShelves" />
       <template v-for="(shelf, index) in supportedShelves">
         <widgets-item-slider :shelf-id="shelf.id" :key="index + '.'" :items="shelf.entities" :continue-listening-shelf="shelf.id === 'continue-listening' || shelf.id === 'continue-reading'" :type="shelf.type" class="bookshelf-row pl-8e my-6e" @selectEntity="(payload) => selectEntity(payload, index)">

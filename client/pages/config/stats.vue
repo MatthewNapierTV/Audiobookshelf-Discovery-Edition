@@ -3,6 +3,9 @@
     <!-- Year in review banner shown at the top in December and January -->
     <stats-year-in-review-banner v-if="showYearInReviewBanner" />
 
+    <!-- Daily listening/reading goal & streak -->
+    <home-goal-card class="mb-4 sm:w-full!" />
+
     <app-settings-content :header-text="$strings.HeaderYourStats" class="mb-4!">
       <div class="flex justify-center">
         <div class="flex p-2">

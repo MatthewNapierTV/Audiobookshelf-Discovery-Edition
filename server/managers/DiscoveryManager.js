@@ -17,6 +17,10 @@ const { sanitizeFilename, filePathToPOSIX } = require('../utils/fileUtils')
 
 const POLL_INTERVAL_MS = 10000
 const PRUNE_INTERVAL_MS = 60 * 60 * 1000 // hourly
+// How often open ("searching") requests are re-checked against the indexers, *arr "wanted" style
+const WANTED_SEARCH_INTERVAL_MS = 6 * 60 * 60 * 1000
+// Gap between individual wanted searches so a long wanted list doesn't hammer the trackers
+const WANTED_SEARCH_GAP_MS = 15 * 1000
 // How long finished/failed downloads are kept before being pruned from history
 const RETENTION_MS = 24 * 60 * 60 * 1000 // 24 hours
 // Consecutive polls a torrent can be missing from qBittorrent before we mark the download failed
@@ -64,6 +68,11 @@ class DiscoveryManager {
   async init() {
     this.pruneTimer = setInterval(() => this.pruneOld(), PRUNE_INTERVAL_MS)
     void this.pruneOld()
+
+    // Keep looking for requested books that weren't available yet
+    this.wantedTimer = setInterval(() => {
+      this.searchWanted().catch((error) => Logger.error(`[DiscoveryManager] wanted search failed`, error))
+    }, WANTED_SEARCH_INTERVAL_MS)
 
     try {
       const active = await Database.discoveryDownloadModel.getActive()
@@ -126,11 +135,16 @@ class DiscoveryManager {
     const mediaType = payload.mediaType === 'ebook' ? 'ebook' : 'audiobook'
     if (!book?.title) throw new Error('A book title is required')
 
+    if (!user.canDiscoveryDownload && !user.canDiscoveryRequest) {
+      throw new Error('You do not have permission to download or request books')
+    }
+
     const { best } = await this.findBestRelease(book, mediaType)
     if (!best) {
-      const err = new Error('No confident match found on your indexers. Pick a release manually.')
-      err.code = 'NO_MATCH'
-      throw err
+      // Not on the indexers (yet): file an open request that keeps searching and downloads the
+      // book as soon as it shows up, instead of making the user come back and retry
+      const request = await this.createRequest({ user, title: book.title, author: book.author, cover: book.cover, mediaType, libraryId: payload.libraryId, release: null })
+      return { request, searching: true }
     }
     Logger.info(`[DiscoveryManager] Auto-selected "${best.title}" (score ${best.score}) for "${book.title}"`)
 
@@ -454,10 +468,21 @@ class DiscoveryManager {
    */
   async createRequest(payload) {
     const { user, release } = payload
-    if (!release || (!release.magnetUrl && !release.downloadUrl)) {
+    // A request may name a specific release, or just a book ("wanted") that we search for
+    if (release && !release.magnetUrl && !release.downloadUrl) {
       throw new Error('Release is missing a download link')
     }
+    if (!release && !payload.title) {
+      throw new Error('A book title is required')
+    }
     const libraryId = payload.libraryId || this.settings.defaultLibraryId
+
+    // Don't stack duplicate open requests for the same book
+    if (!release) {
+      const open = await Database.discoveryRequestModel.getPending()
+      const duplicate = open.find((r) => r.title?.toLowerCase() === payload.title.toLowerCase() && (r.mediaType || 'audiobook') === (payload.mediaType || 'audiobook'))
+      if (duplicate) return duplicate.toClientJSON()
+    }
 
     let request = await Database.discoveryRequestModel.create({
       userId: user.id,
@@ -465,12 +490,13 @@ class DiscoveryManager {
       title: payload.title || release.title,
       author: payload.author || '',
       cover: payload.cover || null,
-      mediaType: payload.mediaType || release.mediaType || 'audiobook',
-      release,
+      mediaType: payload.mediaType || release?.mediaType || 'audiobook',
+      release: release || null,
       status: 'pending'
     })
 
-    if (user.discoveryAutoApprove) {
+    // Users who can download directly don't need an approval step for their own requests
+    if (user.discoveryAutoApprove || user.canDiscoveryDownload) {
       request = await this.approveRequest(request.id, user)
     } else {
       request = await this.reloadRequest(request.id)
@@ -496,6 +522,19 @@ class DiscoveryManager {
     if (!request) throw new Error('Request not found')
     if (request.status !== 'pending') throw new Error('Request is not pending')
 
+    request.approvedByUserId = adminUser?.id || null
+    if (!request.release) {
+      // Book-only request: search now; if nothing's out there yet, keep it open and keep looking
+      const fulfilled = await this.fulfillWanted(request)
+      if (!fulfilled) {
+        request.status = 'searching'
+        await request.save()
+      }
+      const reloaded = await this.reloadRequest(request.id)
+      SocketAuthority.adminEmitter('discovery_request_updated', reloaded.toClientJSON())
+      return reloaded
+    }
+
     const download = await this.submitDownload({
       release: request.release,
       title: request.title,
@@ -507,7 +546,6 @@ class DiscoveryManager {
     })
 
     request.status = 'approved'
-    request.approvedByUserId = adminUser?.id || null
     request.downloadId = download.id
     request.resolvedAt = new Date()
     await request.save()
@@ -515,6 +553,64 @@ class DiscoveryManager {
     const reloaded = await this.reloadRequest(request.id)
     SocketAuthority.adminEmitter('discovery_request_updated', reloaded.toClientJSON())
     return reloaded
+  }
+
+  /**
+   * Try to find and download a release for a book-only request.
+   * @param {import('../models/DiscoveryRequest')} request
+   * @returns {Promise<boolean>} true if a download was started
+   */
+  async fulfillWanted(request) {
+    if (!this.settings.isValid) return false
+    let best = null
+    try {
+      ;({ best } = await this.findBestRelease({ title: request.title, author: request.author }, request.mediaType === 'ebook' ? 'ebook' : 'audiobook'))
+    } catch (error) {
+      Logger.error(`[DiscoveryManager] Wanted search for "${request.title}" failed: ${error.message}`)
+      return false
+    }
+    if (!best) {
+      Logger.debug(`[DiscoveryManager] "${request.title}" not available yet - will keep looking`)
+      return false
+    }
+
+    const download = await this.submitDownload({
+      release: best,
+      title: request.title,
+      author: request.author,
+      cover: request.cover,
+      mediaType: request.mediaType,
+      libraryId: request.libraryId,
+      userId: request.userId
+    })
+    Logger.info(`[DiscoveryManager] Requested book "${request.title}" is now available - downloading "${best.title}"`)
+    request.release = best
+    request.status = 'approved'
+    request.downloadId = download.id
+    request.resolvedAt = new Date()
+    await request.save()
+    return true
+  }
+
+  /**
+   * Re-check every open ("searching") request against the indexers.
+   */
+  async searchWanted() {
+    if (this.searchingWanted || !this.settings.isValid) return
+    this.searchingWanted = true
+    try {
+      const wanted = await Database.discoveryRequestModel.findAll({ where: { status: 'searching' }, order: [['createdAt', 'ASC']] })
+      if (wanted.length) Logger.info(`[DiscoveryManager] Checking ${wanted.length} requested book(s) for new releases`)
+      for (const [i, request] of wanted.entries()) {
+        if (i > 0) await new Promise((resolve) => setTimeout(resolve, WANTED_SEARCH_GAP_MS))
+        if (await this.fulfillWanted(request)) {
+          const reloaded = await this.reloadRequest(request.id)
+          SocketAuthority.adminEmitter('discovery_request_updated', reloaded.toClientJSON())
+        }
+      }
+    } finally {
+      this.searchingWanted = false
+    }
   }
 
   /**
@@ -526,7 +622,7 @@ class DiscoveryManager {
   async denyRequest(requestId, adminUser) {
     const request = await Database.discoveryRequestModel.findByPk(requestId)
     if (!request) throw new Error('Request not found')
-    if (request.status !== 'pending') throw new Error('Request is not pending')
+    if (!['pending', 'searching'].includes(request.status)) throw new Error('Request is not open')
 
     request.status = 'denied'
     request.approvedByUserId = adminUser?.id || null

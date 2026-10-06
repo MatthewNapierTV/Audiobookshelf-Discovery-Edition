@@ -7,112 +7,84 @@
         <span class="material-symbols text-2xl">home</span>
 
         <p class="siderail-label">{{ $strings.ButtonHome }}</p>
-
-        <div v-show="homePage" class="siderail-indicator" />
       </nuxt-link>
 
       <nuxt-link v-if="isPodcastLibrary" :to="`/library/${currentLibraryId}/podcast/latest`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isPodcastLatestPage }">
         <span class="material-symbols text-2xl">&#xe241;</span>
 
         <p class="siderail-label">{{ $strings.ButtonLatest }}</p>
-
-        <div v-show="isPodcastLatestPage" class="siderail-indicator" />
       </nuxt-link>
 
       <nuxt-link :to="`/library/${currentLibraryId}/bookshelf`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': showLibrary }">
         <span class="material-symbols text-2xl">import_contacts</span>
 
         <p class="siderail-label">{{ $strings.ButtonLibrary }}</p>
-
-        <div v-show="showLibrary" class="siderail-indicator" />
       </nuxt-link>
 
       <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/bookshelf/series`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isSeriesPage }">
         <span class="material-symbols text-2xl">view_column</span>
 
         <p class="siderail-label">{{ $strings.ButtonSeries }}</p>
-
-        <div v-show="isSeriesPage" class="siderail-indicator" />
       </nuxt-link>
 
       <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/bookshelf/collections`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': paramId === 'collections' }">
         <span class="material-symbols text-2xl">&#xe431;</span>
 
         <p class="siderail-label">{{ $strings.ButtonCollections }}</p>
-
-        <div v-show="paramId === 'collections'" class="siderail-indicator" />
       </nuxt-link>
 
       <nuxt-link v-if="showPlaylists" :to="`/library/${currentLibraryId}/bookshelf/playlists`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isPlaylistsPage }">
         <span class="material-symbols text-2.5xl">&#xe03d;</span>
 
         <p class="siderail-label">{{ $strings.ButtonPlaylists }}</p>
-
-        <div v-show="isPlaylistsPage" class="siderail-indicator" />
       </nuxt-link>
 
       <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/bookshelf/authors`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isAuthorsPage }">
         <span class="material-symbols text-2xl">groups</span>
 
         <p class="siderail-label">{{ $strings.ButtonAuthors }}</p>
-
-        <div v-show="isAuthorsPage" class="siderail-indicator" />
       </nuxt-link>
 
       <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/narrators`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isNarratorsPage }">
         <span class="material-symbols text-2xl">&#xe91f;</span>
 
         <p class="siderail-label">{{ $strings.LabelNarrators }}</p>
-
-        <div v-show="isNarratorsPage" class="siderail-indicator" />
       </nuxt-link>
 
       <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/discovery`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isDiscoveryPage }">
         <span class="material-symbols text-2xl">travel_explore</span>
 
         <p class="siderail-label">{{ $strings.ButtonDiscovery }}</p>
-
-        <div v-show="isDiscoveryPage" class="siderail-indicator" />
       </nuxt-link>
 
       <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/downloads`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isDownloadsPage }">
         <span class="material-symbols text-2xl">download</span>
 
         <p class="siderail-label">{{ $strings.HeaderDownloads }}</p>
-
-        <div v-show="isDownloadsPage" class="siderail-indicator" />
       </nuxt-link>
 
       <nuxt-link v-if="isBookLibrary && userIsAdminOrUp" :to="`/library/${currentLibraryId}/stats`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isStatsPage }">
         <span class="material-symbols text-2xl">&#xf190;</span>
 
         <p class="siderail-label">{{ $strings.ButtonStats }}</p>
-
-        <div v-show="isStatsPage" class="siderail-indicator" />
       </nuxt-link>
 
       <nuxt-link v-if="isPodcastLibrary && userIsAdminOrUp" :to="`/library/${currentLibraryId}/podcast/search`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isPodcastSearchPage }">
         <span class="abs-icons icon-podcast text-xl"></span>
 
         <p class="siderail-label">{{ $strings.ButtonAdd }}</p>
-
-        <div v-show="isPodcastSearchPage" class="siderail-indicator" />
       </nuxt-link>
 
       <nuxt-link v-if="isPodcastLibrary && userIsAdminOrUp" :to="`/library/${currentLibraryId}/podcast/download-queue`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isPodcastDownloadQueuePage }">
         <span class="material-symbols text-2xl">&#xf090;</span>
 
         <p class="siderail-label">{{ $strings.ButtonDownloadQueue }}</p>
-
-        <div v-show="isPodcastDownloadQueuePage" class="siderail-indicator" />
       </nuxt-link>
 
       <nuxt-link v-if="numIssues" :to="`/library/${currentLibraryId}/bookshelf?filter=issues`" class="siderail-link is-issues w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': showingIssues }">
         <span class="material-symbols text-2xl">warning</span>
 
         <p class="siderail-label">{{ $strings.ButtonIssues }}</p>
-
-        <div v-show="showingIssues" class="siderail-indicator" />
         <div class="absolute top-1 right-1 w-4 h-4 rounded-full bg-white/30 flex items-center justify-center">
           <p class="text-xs font-mono pb-0.5">{{ numIssues }}</p>
         </div>
@@ -277,9 +249,12 @@ export default {
 }
 .siderail-link.is-active > .material-symbols,
 .siderail-link.is-active > .abs-icons {
-  background-color: rgba(25, 200, 245, 0.16);
   color: #19c8f5;
   font-variation-settings: 'FILL' 1;
+}
+.siderail-link.is-active:hover > .material-symbols,
+.siderail-link.is-active:hover > .abs-icons {
+  background-color: transparent;
 }
 .siderail-link.is-issues {
   color: #f0919a;
@@ -291,16 +266,5 @@ export default {
   letter-spacing: 0.01em;
   line-height: 1rem;
   text-align: center;
-}
-.siderail-indicator {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 1.75rem;
-  width: 3px;
-  border-radius: 0 999px 999px 0;
-  background: #19c8f5;
-  box-shadow: 0 0 12px rgba(25, 200, 245, 0.6);
 }
 </style>

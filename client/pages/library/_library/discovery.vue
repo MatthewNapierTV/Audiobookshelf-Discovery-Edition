@@ -63,7 +63,7 @@
               </div>
               <template v-else>
                 <!-- Showcase reel: highly rated, new and upcoming books -->
-                <home-hero v-if="heroBooks.length" :books="heroBooks" compact class="mb-6" @open-book="openBook" @toggle-wishlist="toggleWishlist" />
+                <home-hero v-if="heroBooks.length" :books="heroBooks" compact :can-download="isEnabled && canDownload" :can-request="isEnabled && canRequest" :busy-key="requestingKey" class="mb-6" @request="requestBook" @open-book="openBook" @toggle-wishlist="toggleWishlist" />
 
                 <!-- Genre chips -->
                 <div v-if="genres.length" class="flex gap-2 overflow-x-auto pb-2 mb-6">
@@ -222,6 +222,7 @@ export default {
       storefrontLoading: false,
       shelves: [],
       heroBooks: [],
+      requestingKey: null,
       genres: [],
       browseShelf: null,
       browseBooks: [],
@@ -264,6 +265,27 @@ export default {
       this.shelves = [data?.top10, ...(data?.shelves || [])].filter(Boolean)
       this.genres = data?.genres || []
       this.storefrontLoading = false
+    },
+    async requestBook(book) {
+      this.requestingKey = book.asin || book.id
+      try {
+        const data = await this.$axios.$post('/api/discovery/grab', { book: { title: book.title, author: book.author, cover: book.cover }, mediaType: book.format === 'ebook' ? 'ebook' : 'audiobook', libraryId: this.currentLibraryId })
+        let status = 'requested'
+        if (data.download || data.request?.status === 'approved') {
+          status = 'downloading'
+          this.$toast.success(this.$strings.ToastDownloadStartedSeeDownloads)
+        } else if (data.searching) {
+          this.$toast.info(this.$strings.ToastRequestSearching)
+        } else {
+          this.$toast.success(this.$strings.ToastRequestSubmitted)
+        }
+        this.onBookStatus({ book, status })
+      } catch (error) {
+        console.error('Request failed', error)
+        this.$toast.error(error.response?.data?.error || this.$strings.ToastRequestFailed)
+      } finally {
+        this.requestingKey = null
+      }
     },
     async toggleWishlist(book) {
       try {
@@ -334,10 +356,10 @@ export default {
     },
     // A grab from the details modal changed a book's status - reflect it on every shelf it appears on
     onBookStatus({ book, status }) {
-      const lists = [...this.shelves.map((s) => s.books), this.browseBooks, this.bookResults]
+      const lists = [...this.shelves.map((s) => s.books), this.browseBooks, this.bookResults, this.heroBooks]
       for (const list of lists) {
         for (const b of list) {
-          if (b === book || (book.asin && b.asin === book.asin)) this.$set(b, 'status', status)
+          if (b === book || (book.asin && b.asin === book.asin) || (book.id && b.id === book.id)) this.$set(b, 'status', status)
         }
       }
     },

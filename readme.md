@@ -18,17 +18,18 @@ Designed around what makes Netflix, Audible, Apple Books and Jellyfin easy to us
 
 | Pattern | Why it works | In Faithnet Reads |
 |---|---|---|
-| **Showcase reel** | A single, striking starting point cuts decision fatigue | Full-width banner cycling through the most highly rated, newest and upcoming books (tagged *New release*, *Top rated*, *Coming Nov 4*, *Best seller*) with artwork, blurb, year · rating · length · genre, Sample / details / ♥ Want to Read |
+| **Showcase reel** | A single, striking starting point cuts decision fatigue | Full-width banner cycling through the most highly rated and newest books (tagged *New release*, *Top rated*, *Best seller*) with artwork, blurb, year · rating · length · genre and **Request** / Get, sample, details and ♥ Want to Read |
 | **Stacked themed rows** | Grouped carousels are easy to scan | Continue Listening/Reading, then online rows interleaved with your library's own rows |
 | **Top 10 with big numerals** | Rank numbers draw the eye to what's popular | *Top 10 audiobooks today* from the Audible chart |
 | **"Because you…" rows** | Personal context makes recommendations trustworthy | *Because you have <author>*, *Continue your series* |
 | **Wishlist** | Save now, decide later (Audible wishlist / Apple "Want to Read") | ♡ **Want to Read** on any book, with its own row |
 | **Samples** | Hearing the narrator is a top reason people pick an audiobook | **Listen to sample** in the details sheet (Audible) |
-| **Reading goals & streaks** | Small daily goals build the habit (Apple Books / Kindle) | Daily goal ring (listening + reading minutes), streak and the last 7 days |
-| **Genres everywhere** | Browsing by mood/genre is how most people discover | Genre shortcuts + genre rows (incl. Religion & Spirituality), ordered by what you read most |
+| **Reading goals & streaks** | Small daily goals build the habit (Apple Books / Kindle) | Daily goal ring (listening + reading minutes), streak and the last 7 days — on **Your Stats** |
+| **Requests that don't give up** | *arr-style "wanted" lists: ask once, get it when it exists | **Request** any book; if it isn't on your indexers yet the request stays open (*Searching*) and is re-checked every 6 hours, then downloaded automatically |
+| **Genres everywhere** | Browsing by mood/genre is how most people discover | Genre rows (incl. Religion & Spirituality), ordered by what you read most; every genre on the Discovery page |
 
 **Online sources** (no accounts or keys needed, cached for a few hours, each one fails independently):
-Audible catalog (charts, genres, new releases, pre-orders, series/author lookups, samples) ·
+Audible catalog (charts, genres, new releases, series/author lookups, samples) ·
 Apple Books top charts (audiobooks & ebooks) · Open Library trending & subjects.
 Every cover shows whether it's **In library**, **Downloading** or **Requested**.
 

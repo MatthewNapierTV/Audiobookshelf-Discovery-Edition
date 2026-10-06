@@ -137,6 +137,7 @@ export default {
     requestStatusLabel(rq) {
       const map = {
         pending: this.$strings.LabelPending,
+        searching: this.$strings.LabelSearching,
         approved: this.$strings.LabelApproved,
         denied: this.$strings.LabelDenied,
         completed: this.$strings.LabelComplete,
@@ -147,6 +148,7 @@ export default {
     requestStatusColor(rq) {
       if (rq.status === 'denied' || rq.status === 'failed') return 'text-error'
       if (rq.status === 'approved' || rq.status === 'completed') return 'text-success'
+      if (rq.status === 'searching') return 'text-info'
       return 'text-gray-300'
     },
     upsertDownload(dl) {
@@ -173,6 +175,7 @@ export default {
     downloadStatusLabel(dl) {
       const map = {
         pending: this.$strings.LabelPending,
+        searching: this.$strings.LabelSearching,
         downloading: Math.round((dl.progress || 0) * 100) + '%',
         stalled: this.$strings.LabelStalled,
         importing: this.$strings.LabelImporting,

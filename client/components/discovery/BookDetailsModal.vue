@@ -152,6 +152,9 @@ export default {
         if (data.download) {
           this.$toast.success(this.$strings.ToastDownloadStartedSeeDownloads || 'Download started')
           this.$emit('status', { book: this.book, status: 'downloading' })
+        } else if (data.searching) {
+          this.$toast.info(this.$strings.ToastRequestSearching)
+          this.$emit('status', { book: this.book, status: 'requested' })
         } else if (data.request) {
           const approved = data.request.status === 'approved'
           this.$toast.success(approved ? this.$strings.ToastRequestApproved : this.$strings.ToastRequestSubmitted)

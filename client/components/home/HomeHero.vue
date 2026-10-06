@@ -10,7 +10,7 @@
     <div class="showcase-shade absolute inset-0" />
 
     <!-- Copy -->
-    <div class="relative h-full flex items-end pb-[clamp(5.5rem,13vh,8rem)] pl-8e pr-8e">
+    <div class="showcase-body relative h-full flex items-end pl-8e pr-8e">
       <transition name="showcase-copy" mode="out-in">
         <div :key="keyFor(current)" class="w-full max-w-[44rem]">
           <p class="showcase-tag" :class="`is-${current.showcase || 'new'}`">
@@ -32,11 +32,20 @@
           <p v-if="current.description" class="showcase-desc">{{ current.description }}</p>
 
           <div class="mt-5 flex items-center gap-3">
-            <button v-if="current.sampleUrl" type="button" class="showcase-primary" @click="toggleSample">
-              <span class="material-symbols fill text-2xl">{{ samplePlaying ? 'pause' : 'play_arrow' }}</span
-              >{{ samplePlaying ? $strings.ButtonPause : $strings.ButtonSample }}
+            <!-- Primary: request it (or get it directly if you're allowed to download) -->
+            <button v-if="primaryAction === 'pending'" type="button" class="showcase-primary is-done" disabled>
+              <span class="material-symbols fill text-2xl">{{ current.status === 'downloading' ? 'downloading' : 'schedule' }}</span
+              >{{ current.status === 'downloading' ? $strings.LabelDiscoveryDownloading : $strings.LabelDiscoveryRequested }}
+            </button>
+            <button v-else-if="primaryAction === 'request'" type="button" class="showcase-primary" :disabled="busy" @click="$emit('request', current)">
+              <span class="material-symbols fill text-2xl" :class="{ 'animate-spin': busy }">{{ busy ? 'progress_activity' : canDownload ? 'download' : 'add_circle' }}</span
+              >{{ canDownload ? $strings.ButtonGet : $strings.ButtonRequest }}
             </button>
             <button v-else type="button" class="showcase-primary" @click="$emit('open-book', current)"><span class="material-symbols fill text-2xl">menu_book</span>{{ $strings.ButtonDiscoveryViewDetails }}</button>
+
+            <button v-if="current.sampleUrl" type="button" class="showcase-round" :class="{ 'is-on': samplePlaying }" :aria-label="samplePlaying ? $strings.ButtonPause : $strings.ButtonListenToSample" :title="$strings.ButtonListenToSample" @click="toggleSample">
+              <span class="material-symbols fill text-[1.6rem]">{{ samplePlaying ? 'pause' : 'headphones' }}</span>
+            </button>
             <button type="button" class="showcase-round" :aria-label="$strings.ButtonDiscoveryViewDetails" @click="$emit('open-book', current)">
               <span class="material-symbols text-[1.6rem]">info</span>
             </button>
@@ -49,12 +58,12 @@
     </div>
 
     <!-- Progress dots (the active one fills while the slide is on screen) -->
-    <div v-if="books.length > 1" class="absolute left-0 bottom-[clamp(3.5rem,9vh,5.5rem)] pl-8e flex items-center gap-1.5 z-10">
+    <div v-if="books.length > 1" class="showcase-dots absolute left-0 pl-8e flex items-center gap-1.5 z-10">
       <button v-for="(book, i) in books" :key="keyFor(book) + '-dot'" type="button" class="showcase-dot" :class="{ 'is-active': i === index, 'is-paused': paused }" :aria-label="`${i + 1} / ${books.length}: ${book.title}`" @click="go(i)">
         <span v-if="i === index" :key="cycle" class="showcase-dot-fill" :style="{ animationDuration: interval + 'ms' }" @animationend="next" />
       </button>
     </div>
-    <div v-if="books.length > 1" class="showcase-pager absolute right-0 bottom-[clamp(3rem,8.5vh,5rem)] pr-8e flex items-center gap-2 z-10">
+    <div v-if="books.length > 1" class="showcase-pager absolute right-0 pr-8e flex items-center gap-2 z-10">
       <span class="text-xs tabular-nums text-gray-300 mr-1">{{ index + 1 }} / {{ books.length }}</span>
       <button type="button" class="showcase-arrow" :aria-label="$strings.ButtonPrevious" @click="go(index - 1)"><span class="material-symbols text-2xl">chevron_left</span></button>
       <button type="button" class="showcase-arrow" :aria-label="$strings.ButtonNext" @click="go(index + 1)"><span class="material-symbols text-2xl">chevron_right</span></button>
@@ -76,7 +85,11 @@ export default {
       default: 9000
     },
     // Shorter banner for embedding inside a page (e.g. the Discovery page)
-    compact: Boolean
+    compact: Boolean,
+    canDownload: Boolean,
+    canRequest: Boolean,
+    // key (asin/id) of a book whose request is in flight
+    busyKey: String
   },
   data() {
     return {
@@ -93,12 +106,19 @@ export default {
     inWishlist() {
       return this.$store.getters['wishlist/has'](this.current)
     },
+    busy() {
+      return !!this.busyKey && this.busyKey === this.keyFor(this.current)
+    },
+    primaryAction() {
+      if (this.current.status === 'requested' || this.current.status === 'downloading') return 'pending'
+      if (this.canDownload || this.canRequest) return 'request'
+      return 'details'
+    },
     tagIcon() {
-      return { new: 'new_releases', top: 'workspace_premium', soon: 'event_upcoming', popular: 'trending_up' }[this.current.showcase] || 'auto_awesome'
+      return { new: 'new_releases', top: 'workspace_premium', popular: 'trending_up' }[this.current.showcase] || 'auto_awesome'
     },
     tagText() {
       const s = this.current.showcase
-      if (s === 'soon') return this.current.releaseDate ? this.$getString('LabelComingOnDate', [this.formatDate(this.current.releaseDate)]) : this.$strings.LabelComingSoon
       if (s === 'top') return this.$strings.LabelTopRated
       if (s === 'popular') return this.$strings.LabelBestSeller
       return this.$strings.LabelNewRelease
@@ -125,10 +145,6 @@ export default {
     },
     artFor(book) {
       return book.coverLarge || book.cover
-    },
-    formatDate(date) {
-      const d = new Date(date)
-      return isNaN(d) ? date : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
     },
     stopSample() {
       const audio = this.$refs.sample
@@ -174,6 +190,24 @@ export default {
 .showcase {
   height: clamp(30rem, 74vh, 46rem);
   font-size: 1rem;
+}
+.showcase-body {
+  padding-bottom: clamp(8rem, 17vh, 10.5rem);
+}
+.showcase-dots {
+  bottom: clamp(6rem, 12.5vh, 8rem);
+}
+.showcase-pager {
+  bottom: clamp(5.6rem, 12vh, 7.6rem);
+}
+.showcase.is-compact .showcase-body {
+  padding-bottom: clamp(4.5rem, 10vh, 6rem);
+}
+.showcase.is-compact .showcase-dots {
+  bottom: clamp(2.25rem, 5vh, 3rem);
+}
+.showcase.is-compact .showcase-pager {
+  bottom: clamp(1.9rem, 4.5vh, 2.6rem);
 }
 .showcase.is-compact {
   height: clamp(24rem, 58vh, 34rem);
@@ -222,28 +256,20 @@ export default {
 .showcase-tag {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.72rem;
+  gap: 0.4rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  padding: 0.35rem 0.7rem 0.35rem 0.55rem;
-  border-radius: 999px;
-  margin-bottom: 0.9rem;
-  backdrop-filter: blur(8px);
-  background: rgba(25, 200, 245, 0.16);
+  margin-bottom: 0.75rem;
   color: #7fe3ff;
-  border: 1px solid rgba(25, 200, 245, 0.35);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.6);
 }
 .showcase-tag.is-top {
-  background: rgba(250, 204, 21, 0.14);
   color: #fde68a;
-  border-color: rgba(250, 204, 21, 0.35);
 }
-.showcase-tag.is-soon {
-  background: rgba(168, 85, 247, 0.16);
-  color: #e9d5ff;
-  border-color: rgba(168, 85, 247, 0.4);
+.showcase-tag.is-popular {
+  color: #fca5a5;
 }
 .showcase-title {
   font-size: clamp(2.1rem, 4.6vw, 4rem);
@@ -317,7 +343,13 @@ export default {
     transform 0.15s ease,
     background-color 0.2s ease;
 }
-.showcase-primary:hover {
+.showcase-primary:disabled {
+  cursor: default;
+}
+.showcase-primary.is-done {
+  background: rgba(255, 255, 255, 0.85);
+}
+.showcase-primary:hover:not(:disabled) {
   transform: translateY(-1px);
   background: #e9f9ff;
 }

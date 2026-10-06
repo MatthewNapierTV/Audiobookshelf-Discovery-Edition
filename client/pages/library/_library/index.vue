@@ -7,21 +7,12 @@
       <template #top>
         <!-- Showcase reel: highly rated, new and upcoming books -->
         <div v-if="!storefrontLoaded" class="home-hero-skeleton" />
-        <home-hero v-else :books="hero" @open-book="openBook" @toggle-wishlist="toggleWishlist" />
+        <home-hero v-else :books="hero" :can-download="canDownload" :can-request="canRequest" :busy-key="requestingKey" @request="requestBook" @open-book="openBook" @toggle-wishlist="toggleWishlist" />
       </template>
 
       <template #before-shelves="{ shelves }">
-        <!-- Today: daily goal + genre shortcuts (tucked up over the bottom of the reel) -->
-        <div class="home-today relative z-10 pl-8e pr-8e flex flex-col lg:flex-row gap-5" :class="hero.length || !storefrontLoaded ? '-mt-[clamp(2.5rem,7vh,4.5rem)]' : 'mt-6e'">
-          <home-goal-card />
-          <div v-if="genres.length" class="surface-card bg-surface-2/75 backdrop-blur-xl flex-1 min-w-0 p-5">
-            <p class="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-gray-400 mb-3">{{ $strings.HeaderBrowseGenres }}</p>
-            <div class="flex flex-wrap gap-2">
-              <nuxt-link v-for="genre in genres" :key="genre.id" :to="genreLink(genre)" class="px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-brand/15 hover:text-brand border border-white/10 text-sm text-gray-200 transition-colors">{{ genre.name }}</nuxt-link>
-            </div>
-          </div>
-        </div>
-
+        <!-- Rows start right under the reel, the first one tucked up over its bottom edge -->
+        <div v-if="hero.length || !storefrontLoaded" class="home-reel-overlap" aria-hidden="true" />
         <home-store-row v-for="row in rowsAt(-1, shelves)" :key="row.key" :row="row" :card-width="storeCardWidth" @select="openBook" @see-all="seeAll" />
       </template>
 
@@ -62,7 +53,7 @@ export default {
       hero: [],
       top10: null,
       storeShelves: [],
-      genres: [],
+      requestingKey: null,
       canDownload: false,
       canRequest: false,
       downloadsEnabled: true,
@@ -145,8 +136,31 @@ export default {
     chooseRelease(book) {
       this.$router.push({ path: `/library/${this.libraryId}/discovery`, query: { q: book.title, author: book.author || '' } })
     },
-    genreLink(genre) {
-      return { path: `/library/${this.libraryId}/discovery`, query: { categoryId: genre.id, title: genre.name } }
+    /** Get (download) or Request a book straight from the showcase reel */
+    async requestBook(book) {
+      const key = book.asin || book.id
+      this.requestingKey = key
+      try {
+        const data = await this.$axios.$post('/api/discovery/grab', { book: { title: book.title, author: book.author, cover: book.cover }, mediaType: book.format === 'ebook' ? 'ebook' : 'audiobook', libraryId: this.libraryId })
+        let status = 'requested'
+        if (data.download) {
+          status = 'downloading'
+          this.$toast.success(this.$strings.ToastDownloadStartedSeeDownloads)
+        } else if (data.searching) {
+          this.$toast.info(this.$strings.ToastRequestSearching)
+        } else if (data.request?.status === 'approved') {
+          status = 'downloading'
+          this.$toast.success(this.$strings.ToastRequestApproved)
+        } else {
+          this.$toast.success(this.$strings.ToastRequestSubmitted)
+        }
+        this.onBookStatus({ book, status })
+      } catch (error) {
+        console.error('Request failed', error)
+        this.$toast.error(error.response?.data?.error || this.$strings.ToastRequestFailed)
+      } finally {
+        this.requestingKey = null
+      }
     },
     seeAll(shelf) {
       if (!shelf.browse) return
@@ -163,7 +177,6 @@ export default {
       this.hero = storefront?.hero || []
       this.top10 = storefront?.top10 || null
       this.storeShelves = storefront?.shelves || []
-      this.genres = storefront?.genres || []
       this.downloadsEnabled = !!config?.enabled
       this.canDownload = !!(config?.enabled && config?.canDownload)
       this.canRequest = !!(config?.enabled && config?.canRequest)
@@ -180,6 +193,9 @@ export default {
 </script>
 
 <style>
+.home-reel-overlap {
+  margin-top: calc(-1 * clamp(4.5rem, 10vh, 6.5rem));
+}
 .home-hero-skeleton {
   height: clamp(30rem, 74vh, 46rem);
   background: linear-gradient(110deg, rgba(255, 255, 255, 0.02) 30%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.02) 70%);

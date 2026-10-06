@@ -24,7 +24,7 @@ class DiscoveryRequest extends Model {
     this.mediaType
     /** @type {Object} full chosen release (magnet/download url, indexer, size, etc.) */
     this.release
-    /** @type {string} pending | approved | denied | completed | failed */
+    /** @type {string} pending | searching | approved | denied | completed | failed  (searching = approved, waiting for a release to appear on the indexers) */
     this.status
     /** @type {string} */
     this.approvedByUserId
@@ -39,6 +39,7 @@ class DiscoveryRequest extends Model {
   }
 
   static PENDING = 'pending'
+  static SEARCHING = 'searching'
 
   /**
    * @param {Object} [where]
@@ -46,7 +47,7 @@ class DiscoveryRequest extends Model {
    */
   static getPending(where = {}) {
     return this.findAll({
-      where: { status: DiscoveryRequest.PENDING, ...where },
+      where: { status: [DiscoveryRequest.PENDING, DiscoveryRequest.SEARCHING], ...where },
       include: { model: this.sequelize.models.user, attributes: ['id', 'username'] },
       order: [['createdAt', 'ASC']]
     })
@@ -62,7 +63,7 @@ class DiscoveryRequest extends Model {
     return this.findAll({
       where: {
         ...where,
-        [Op.or]: [{ status: DiscoveryRequest.PENDING }, { resolvedAt: { [Op.gte]: cutoff } }]
+        [Op.or]: [{ status: [DiscoveryRequest.PENDING, DiscoveryRequest.SEARCHING] }, { resolvedAt: { [Op.gte]: cutoff } }]
       },
       include: { model: this.sequelize.models.user, attributes: ['id', 'username'] },
       order: [['createdAt', 'DESC']]
@@ -113,13 +114,15 @@ class DiscoveryRequest extends Model {
       author: this.author,
       cover: this.cover,
       mediaType: this.mediaType,
-      release: {
-        title: this.release?.title,
-        indexer: this.release?.indexer,
-        protocol: this.release?.protocol,
-        size: this.release?.size || 0,
-        seeders: this.release?.seeders ?? null
-      },
+      release: this.release
+        ? {
+            title: this.release?.title,
+            indexer: this.release?.indexer,
+            protocol: this.release?.protocol,
+            size: this.release?.size || 0,
+            seeders: this.release?.seeders ?? null
+          }
+        : null,
       status: this.status,
       downloadId: this.downloadId,
       createdAt: this.createdAt ? this.createdAt.valueOf() : null,
