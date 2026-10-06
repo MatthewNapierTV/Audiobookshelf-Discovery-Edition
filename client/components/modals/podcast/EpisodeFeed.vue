@@ -5,7 +5,7 @@
         <p class="text-3xl text-white truncate">{{ title }}</p>
       </div>
     </template>
-    <div ref="wrapper" id="podcast-wrapper" class="p-4 w-full text-sm py-2 rounded-lg bg-bg shadow-lg border border-black-300 relative overflow-hidden">
+    <div ref="wrapper" id="podcast-wrapper" class="p-4 w-full text-sm py-2 rounded-2xl bg-surface-2 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)] border border-white/10 relative overflow-hidden">
       <div v-if="episodesCleaned.length" class="w-full py-3 mx-auto flex">
         <form @submit.prevent="submit" class="flex grow">
           <ui-text-input v-model="search" @input="inputUpdate" type="search" :placeholder="$strings.PlaceholderSearchEpisode" class="grow mr-2 text-sm md:text-base" />

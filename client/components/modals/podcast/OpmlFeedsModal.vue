@@ -5,7 +5,7 @@
         <p class="text-3xl text-white truncate">{{ title }}</p>
       </div>
     </template>
-    <div ref="wrapper" class="p-4 w-full text-sm py-2 rounded-lg bg-bg shadow-lg border border-black-300 relative overflow-hidden">
+    <div ref="wrapper" class="p-4 w-full text-sm py-2 rounded-2xl bg-surface-2 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)] border border-white/10 relative overflow-hidden">
       <div class="w-full p-4">
         <div class="flex items-center -mx-2 mb-2">
           <div class="w-full md:w-2/3 p-2">

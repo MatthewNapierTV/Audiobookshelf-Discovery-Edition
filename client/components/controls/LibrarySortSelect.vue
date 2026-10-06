@@ -1,13 +1,13 @@
 <template>
   <div ref="wrapper" class="relative" v-click-outside="clickOutside">
-    <button type="button" class="relative w-full h-full bg-fg border border-gray-500 hover:border-gray-400 rounded-sm shadow-xs pl-3 pr-3 py-0 text-left focus:outline-hidden sm:text-sm cursor-pointer" aria-haspopup="menu" :aria-expanded="showMenu" @click.prevent="showMenu = !showMenu">
+    <button type="button" class="relative w-full h-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full pl-4 pr-3 py-0 transition-colors text-left focus:outline-hidden sm:text-sm cursor-pointer" aria-haspopup="menu" :aria-expanded="showMenu" @click.prevent="showMenu = !showMenu">
       <span class="flex items-center justify-between">
         <span class="block truncate text-xs" :class="!selectedText ? 'text-gray-300' : ''">{{ selectedText }}</span>
         <span class="material-symbols text-lg text-yellow-400" :aria-label="descending ? $strings.LabelSortDescending : $strings.LabelSortAscending">{{ descending ? 'expand_more' : 'expand_less' }}</span>
       </span>
     </button>
 
-    <ul v-show="showMenu" class="librarySortMenu absolute z-10 mt-1 w-full bg-bg border border-black-200 shadow-lg max-h-96 rounded-md py-1 ring-1 ring-black/5 overflow-auto focus:outline-hidden text-sm" role="menu">
+    <ul v-show="showMenu" class="librarySortMenu absolute z-10 mt-1 w-full bg-surface-2/95 glass-strong border border-white/10 shadow-2xl max-h-96 rounded-xl p-1 overflow-auto focus:outline-hidden text-sm" role="menu">
       <template v-for="item in selectItems">
         <li :key="item.value" class="select-none relative py-2 pr-9 cursor-pointer hover:bg-white/5" :class="item.value === selected ? 'bg-white/5 text-yellow-400' : 'text-gray-200 hover:text-white'" role="menuitem" @click="clickedOption(item.value)">
           <div class="flex items-center">

@@ -35,18 +35,16 @@
       </div>
     </div>
     <div class="relative">
-      <div class="relative text-center categoryPlacard transform z-30 top-0 left-4e md:left-8e w-44e rounded-md">
-        <div class="w-full h-full shinyBlack flex items-center justify-center rounded-xs border" :style="{ padding: `0em 0.5em` }">
-          <h2 :style="{ fontSize: 0.9 + 'em' }">{{ $strings[shelf.labelStringKey] }}</h2>
-        </div>
+      <div class="relative z-30 top-0 left-4e md:left-8e pt-1e">
+        <h2 class="section-title text-white" :style="{ fontSize: 1.2 + 'em' }">{{ $strings[shelf.labelStringKey] }}</h2>
       </div>
 
       <div class="bookshelfDividerCategorized h-6e w-full absolute top-0 left-0 right-0 z-20"></div>
     </div>
-    <button v-show="canScrollLeft && !isScrolling" :aria-label="$strings.ButtonScrollLeft" class="hidden sm:flex absolute top-0 left-0 w-32 pr-8 bg-black book-shelf-arrow-left items-center justify-center cursor-pointer opacity-0 hover:opacity-100 z-40" @click="scrollLeft">
+    <button v-show="canScrollLeft && !isScrolling" :aria-label="$strings.ButtonScrollLeft" class="hidden sm:flex absolute top-0 left-0 w-32 pr-8 book-shelf-arrow-left items-center justify-center cursor-pointer opacity-0 hover:opacity-100 z-40" @click="scrollLeft">
       <span class="material-symbols text-white" :style="{ fontSize: 3.75 + 'em' }">chevron_left</span>
     </button>
-    <button v-show="canScrollRight && !isScrolling" :aria-label="$strings.ButtonScrollRight" class="hidden sm:flex absolute top-0 right-0 w-32 pl-8 bg-black book-shelf-arrow-right items-center justify-center cursor-pointer opacity-0 hover:opacity-100 z-40" @click="scrollRight">
+    <button v-show="canScrollRight && !isScrolling" :aria-label="$strings.ButtonScrollRight" class="hidden sm:flex absolute top-0 right-0 w-32 pl-8 book-shelf-arrow-right items-center justify-center cursor-pointer opacity-0 hover:opacity-100 z-40" @click="scrollRight">
       <span class="material-symbols text-white" :style="{ fontSize: 3.75 + 'em' }">chevron_right</span>
     </button>
   </div>
@@ -192,19 +190,16 @@ export default {
 }
 
 .bookshelfDividerCategorized {
-  background: rgb(149, 119, 90);
-  background: linear-gradient(180deg, rgb(122, 94, 68) 0%, rgb(92, 62, 31) 17%, rgb(82, 54, 26) 88%, rgba(71, 48, 25, 1) 100%);
-  box-shadow: 2px 14px 8px #111111aa;
+  height: 1px !important;
+  background: var(--bookshelf-divider-bg);
 }
 
 .book-shelf-arrow-right {
   height: calc(100% - 1.5em);
-  background: rgb(48, 48, 48);
-  background: linear-gradient(90deg, rgba(48, 48, 48, 0) 0%, rgba(25, 25, 25, 0.25) 8%, rgba(17, 17, 17, 0.4) 28%, rgba(17, 17, 17, 0.6) 71%, rgba(10, 10, 10, 0.6) 86%, rgba(0, 0, 0, 0.7) 100%);
+  background: linear-gradient(90deg, rgba(16, 18, 22, 0) 0%, rgba(16, 18, 22, 0.85) 70%);
 }
 .book-shelf-arrow-left {
   height: calc(100% - 1.5em);
-  background: rgb(48, 48, 48);
-  background: linear-gradient(-90deg, rgba(48, 48, 48, 0) 0%, rgba(25, 25, 25, 0.25) 8%, rgba(17, 17, 17, 0.4) 28%, rgba(17, 17, 17, 0.6) 71%, rgba(10, 10, 10, 0.6) 86%, rgba(0, 0, 0, 0.7) 100%);
+  background: linear-gradient(-90deg, rgba(16, 18, 22, 0) 0%, rgba(16, 18, 22, 0.85) 70%);
 }
 </style>

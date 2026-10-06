@@ -5,7 +5,7 @@
         <p class="text-3xl text-white truncate">{{ $strings.LabelShare }}</p>
       </div>
     </template>
-    <div class="px-6 py-8 w-full text-sm rounded-lg bg-bg shadow-lg border border-black-300 overflow-y-auto overflow-x-hidden" style="max-height: 80vh">
+    <div class="px-6 py-8 w-full text-sm rounded-2xl bg-surface-2 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)] border border-white/10 overflow-y-auto overflow-x-hidden" style="max-height: 80vh">
       <div class="absolute top-0 right-0 p-4">
         <ui-tooltip :text="$strings.LabelClickForMoreInfo" class="inline-flex ml-2">
           <a href="https://www.audiobookshelf.org/guides/media-item-shares" target="_blank" class="inline-flex">

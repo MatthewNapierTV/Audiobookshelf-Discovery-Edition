@@ -5,7 +5,7 @@
         <p class="text-3xl text-white truncate">{{ $strings.HeaderSetBackupSchedule }}</p>
       </div>
     </template>
-    <div v-if="show && newCronExpression" class="p-4 w-full text-sm py-6 rounded-lg bg-bg shadow-lg border border-black-300 relative overflow-hidden" style="min-height: 400px; max-height: 80vh">
+    <div v-if="show && newCronExpression" class="p-4 w-full text-sm py-6 rounded-2xl bg-surface-2 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)] border border-white/10 relative overflow-hidden" style="min-height: 400px; max-height: 80vh">
       <widgets-cron-expression-builder ref="expressionBuilder" v-model="newCronExpression" @input="expressionUpdated" />
 
       <div class="flex items-center justify-end">

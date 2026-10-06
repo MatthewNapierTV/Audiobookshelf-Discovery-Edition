@@ -71,7 +71,7 @@
                       <h2 class="text-2xl md:text-4xl font-bold leading-tight line-clamp-2">{{ heroBook.title }}</h2>
                       <p class="text-sm md:text-base text-gray-200 mt-1">{{ $getString('LabelByAuthor', [heroBook.author || $strings.LabelUnknown]) }}</p>
                       <p v-if="heroBook.description" class="hidden md:block text-sm text-gray-300 mt-3 max-w-2xl line-clamp-3">{{ heroBook.description }}</p>
-                      <ui-btn color="bg-yellow-500" class="text-black! font-semibold mt-4" small>{{ $strings.ButtonDiscoveryViewDetails }}</ui-btn>
+                      <ui-btn color="brand" class="mt-4" small>{{ $strings.ButtonDiscoveryViewDetails }}</ui-btn>
                     </div>
                   </div>
                 </div>

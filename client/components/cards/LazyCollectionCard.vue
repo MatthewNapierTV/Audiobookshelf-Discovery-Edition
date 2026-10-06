@@ -1,8 +1,7 @@
 <template>
-  <div ref="card" :id="`collection-card-${index}`" role="button" :style="{ width: cardWidth + 'px' }" class="absolute top-0 left-0 rounded-xs z-30 cursor-pointer" @mousedown.prevent @mouseup.prevent @mousemove.prevent @mouseover="mouseover" @mouseleave="mouseleave" @click="clickCard">
+  <div ref="card" :id="`collection-card-${index}`" role="button" :style="{ width: cardWidth + 'px' }" class="abs-card absolute top-0 left-0 z-30 cursor-pointer" @mousedown.prevent @mouseup.prevent @mousemove.prevent @mouseover="mouseover" @mouseleave="mouseleave" @click="clickCard">
     <div class="relative" :style="{ height: coverHeight + 'px' }">
-      <div class="absolute top-0 left-0 w-full box-shadow-book shadow-height" />
-      <div class="w-full h-full bg-primary relative rounded-sm overflow-hidden">
+      <div class="abs-card-cover w-full h-full bg-surface-3 relative rounded-[0.6em] overflow-hidden">
         <covers-collection-cover ref="cover" :book-items="books" :width="cardWidth" :height="coverHeight" :book-cover-aspect-ratio="bookCoverAspectRatio" />
       </div>
       <div v-show="isHovering && userCanUpdate" class="w-full h-full absolute top-0 left-0 z-10 bg-black/40 pointer-events-none">

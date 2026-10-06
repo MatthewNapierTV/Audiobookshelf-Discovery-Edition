@@ -1,13 +1,13 @@
 <template>
-  <div class="bg-bg rounded-md shadow-lg border border-white/5 p-2 sm:p-4 mb-8">
+  <div class="surface-card bg-surface-2/70 shadow-[0_20px_50px_-25px_rgba(0,0,0,0.7)] p-3 sm:p-6 mb-8">
     <div class="flex items-center mb-2">
       <slot name="header-prefix"></slot>
-      <h1 class="text-xl">{{ headerText }}</h1>
+      <h1 class="text-xl font-semibold tracking-tight">{{ headerText }}</h1>
 
       <slot name="header-items"></slot>
     </div>
 
-    <p v-if="description" id="settings-description" class="mb-6 text-gray-200" v-html="description" />
+    <p v-if="description" id="settings-description" class="mb-6 text-sm text-gray-400" v-html="description" />
 
     <slot></slot>
   </div>

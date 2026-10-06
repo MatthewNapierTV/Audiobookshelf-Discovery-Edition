@@ -5,8 +5,30 @@
 @import './absicons.css';
 
 :root {
-  --bookshelf-texture-img: url(~static/textures/wood_default.jpg);
-  --bookshelf-divider-bg: linear-gradient(180deg, rgba(149, 119, 90, 1) 0%, rgba(103, 70, 37, 1) 17%, rgba(103, 70, 37, 1) 88%, rgba(71, 48, 25, 1) 100%);
+  /* The wooden shelf look is replaced by a clean, flat surface. Kept as variables so themes can override. */
+  --bookshelf-texture-img: none;
+  --bookshelf-divider-bg: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.06) 15%, rgba(255, 255, 255, 0.06) 85%, rgba(255, 255, 255, 0) 100%);
+  --app-page-bg: radial-gradient(1200px 600px at 85% -10%, rgba(245, 181, 68, 0.07), transparent 60%), radial-gradient(900px 500px at -10% 110%, rgba(79, 143, 247, 0.06), transparent 60%), linear-gradient(180deg, #14161b 0%, #101216 100%);
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: #101216;
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background-color: rgba(245, 181, 68, 0.35);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid rgba(245, 181, 68, 0.75);
+  outline-offset: 2px;
 }
 
 .page {
@@ -22,11 +44,12 @@
 
 #bookshelf {
   height: calc(100% - 40px);
-  background-image: linear-gradient(to right bottom, #2e2e2e, #303030, #313131, #333333, #353535, #343434, #323232, #313131, #2c2c2c, #282828, #232323, #1f1f1f);
+  background: var(--app-page-bg);
+  background-attachment: fixed;
 
   /* For Firefox */
   scrollbar-width: thin;
-  scrollbar-color: #855620 rgba(0, 0, 0, 0);
+  scrollbar-color: rgba(255, 255, 255, 0.18) rgba(0, 0, 0, 0);
 }
 
 .bookshelf-row {
@@ -44,7 +67,8 @@
 }
 
 #page-wrapper {
-  background-image: linear-gradient(to right bottom, #2e2e2e, #303030, #313131, #333333, #353535, #343434, #323232, #313131, #2c2c2c, #282828, #232323, #1f1f1f);
+  background: var(--app-page-bg);
+  background-attachment: fixed;
 }
 
 /* width */
@@ -63,13 +87,16 @@
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: #855620;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #704922;
+  background: rgba(255, 255, 255, 0.28);
+  background-clip: padding-box;
 }
 
 .no-scroll::-webkit-scrollbar {
@@ -97,21 +124,32 @@ input[type='number'] {
 }
 
 .tracksTable {
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   width: 100%;
-  border: 1px solid #474747;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0.625rem;
+  overflow: hidden;
 }
 
 .tracksTable tr:nth-child(even) {
-  background-color: #2e2e2e;
+  background-color: #1a1d23;
 }
 
 .tracksTable tr {
-  background-color: #373838;
+  background-color: #1d2027;
 }
 
 .tracksTable tr:hover:not(:has(th)) {
-  background-color: #474747;
+  background-color: #272b34;
+}
+
+.tracksTable th {
+  background-color: #15171c;
+  color: #9aa0ad;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
 }
 
 .tracksTable td {
@@ -234,7 +272,7 @@ Bookshelf Label
 .abs-btn::before {
   content: '';
   position: absolute;
-  border-radius: 6px;
+  border-radius: inherit;
   top: 0;
   left: 0;
   width: 100%;
@@ -249,4 +287,177 @@ Bookshelf Label
 
 .abs-btn:disabled::before {
   background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Premium theme utilities
+--------------------------------------------------------------------------------------------- */
+
+/* Frosted glass chrome (app bar, toolbars, player) */
+.glass {
+  background-color: rgba(18, 20, 25, 0.72);
+  backdrop-filter: saturate(160%) blur(18px);
+  -webkit-backdrop-filter: saturate(160%) blur(18px);
+}
+
+.glass-strong {
+  background-color: rgba(14, 15, 19, 0.86);
+  backdrop-filter: saturate(160%) blur(24px);
+  -webkit-backdrop-filter: saturate(160%) blur(24px);
+}
+
+.hairline {
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+/* Elevated card surface */
+.surface-card {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0.875rem;
+}
+
+/* Brand button (primary call-to-action) */
+.btn-brand {
+  background: linear-gradient(180deg, #ffc65c 0%, #f5b544 55%, #e9a42c 100%);
+  color: #1a1306 !important;
+  font-weight: 600;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset, 0 6px 18px -6px rgba(245, 181, 68, 0.55);
+}
+
+.btn-brand:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+/* Section headings on shelves/home */
+.section-title {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+/* Smooth hover lift used by cover cards */
+.lift {
+  transition:
+    transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.25s ease;
+}
+
+.lift:hover {
+  transform: translateY(-4px);
+}
+
+/* Large blurred cover backdrop for detail pages */
+.hero-backdrop {
+  position: absolute;
+  inset: -60px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(60px) saturate(140%);
+  opacity: 0.45;
+  transform: scale(1.1);
+  pointer-events: none;
+}
+
+.hero-fade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(16, 18, 22, 0.2) 0%, rgba(16, 18, 22, 0.75) 55%, #111317 100%),
+    linear-gradient(90deg, rgba(16, 18, 22, 0.6) 0%, rgba(16, 18, 22, 0) 60%);
+  pointer-events: none;
+}
+
+/* Toasts */
+.Vue-Toastification__toast {
+  border-radius: 0.75rem !important;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 32px -10px rgba(0, 0, 0, 0.6) !important;
+  font-family: var(--font-sans) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lift,
+  .lift:hover {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Cover cards (books, series, collections, playlists)
+--------------------------------------------------------------------------------------------- */
+.abs-card-cover {
+  box-shadow: var(--shadow-card);
+  transition:
+    transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.28s ease;
+  /* subtle inner edge so dark covers don't melt into the background */
+  outline: 1px solid rgba(255, 255, 255, 0.06);
+  outline-offset: -1px;
+}
+
+.abs-card:hover .abs-card-cover,
+.abs-card:focus-visible .abs-card-cover {
+  transform: translateY(-0.25em);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.abs-card:focus-visible {
+  outline: none;
+}
+
+.abs-card:focus-visible .abs-card-cover {
+  outline: 2px solid rgba(245, 181, 68, 0.8);
+}
+
+.abs-card-overlay {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.05) 35%, rgba(0, 0, 0, 0.1) 60%, rgba(0, 0, 0, 0.65) 100%);
+  animation: abs-fade-in 0.18s ease-out;
+}
+
+.abs-card-action {
+  width: 2.6em;
+  height: 2.6em;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a1306;
+  background: linear-gradient(180deg, #ffc65c 0%, #f5b544 60%, #e9a42c 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 10px 24px -6px rgba(0, 0, 0, 0.7);
+  transition: transform 0.18s ease;
+}
+
+.abs-card-action .material-symbols {
+  font-size: 1.6em;
+}
+
+.abs-card-action:hover {
+  transform: scale(1.08);
+}
+
+.abs-card-badge {
+  border-radius: 0.4em;
+  background-color: rgba(10, 11, 14, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 600;
+  color: #fff;
+}
+
+.abs-card-meta p[cy-id='title'] {
+  font-weight: 550;
+  color: #f1f2f5;
+}
+
+@keyframes abs-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

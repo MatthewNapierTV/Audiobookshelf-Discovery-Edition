@@ -1,6 +1,14 @@
 <template>
-  <div v-if="currentLibrary" class="relative h-8 max-w-52 md:min-w-32" v-click-outside="clickOutsideObj">
-    <button type="button" :disabled="disabled" class="w-10 sm:w-full relative h-full border border-white/10 hover:border-opacity-20 rounded-sm shadow-xs px-2 text-left text-sm cursor-pointer bg-black/20 text-gray-400 hover:text-gray-200" aria-haspopup="menu" :aria-expanded="showMenu" :aria-label="$strings.ButtonLibrary + ': ' + currentLibrary.name" @click.stop.prevent="clickShowMenu">
+  <div v-if="currentLibrary" class="relative h-9 max-w-52 md:min-w-36" v-click-outside="clickOutsideObj">
+    <button
+      type="button"
+      :disabled="disabled"
+      class="w-10 sm:w-full relative h-full border border-white/10 hover:border-white/20 rounded-full px-3 text-left text-sm cursor-pointer bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-colors"
+      aria-haspopup="menu"
+      :aria-expanded="showMenu"
+      :aria-label="$strings.ButtonLibrary + ': ' + currentLibrary.name"
+      @click.stop.prevent="clickShowMenu"
+    >
       <div class="flex items-center justify-center sm:justify-start">
         <ui-library-icon :icon="currentLibraryIcon" class="sm:mr-1.5" />
         <span class="hidden sm:block truncate">{{ currentLibrary.name }}</span>
@@ -8,9 +16,9 @@
     </button>
 
     <transition name="menu">
-      <ul v-show="showMenu" class="absolute z-10 -mt-px w-full min-w-48 bg-primary border border-black-200 shadow-lg rounded-b-md py-1 overflow-auto focus:outline-hidden sm:text-sm librariesDropdownMenu" tabindex="-1" role="menu">
+      <ul v-show="showMenu" class="absolute z-10 mt-2 w-full min-w-56 bg-surface-2/95 glass-strong border border-white/10 shadow-2xl rounded-xl p-1 overflow-auto focus:outline-hidden sm:text-sm librariesDropdownMenu" tabindex="-1" role="menu">
         <template v-for="library in librariesFiltered">
-          <li :key="library.id" class="text-gray-400 hover:text-white relative py-2 cursor-pointer hover:bg-black-400" role="menuitem" tabindex="0" @keydown.enter="selectLibrary(library)" @click="selectLibrary(library)">
+          <li :key="library.id" class="text-gray-300 hover:text-white relative py-2 cursor-pointer hover:bg-white/10 rounded-lg" role="menuitem" tabindex="0" @keydown.enter="selectLibrary(library)" @click="selectLibrary(library)">
             <div class="flex items-center px-2">
               <ui-library-icon :icon="library.icon" class="mr-1.5" />
               <span class="font-normal block truncate font-sans text-sm">{{ library.name }}</span>

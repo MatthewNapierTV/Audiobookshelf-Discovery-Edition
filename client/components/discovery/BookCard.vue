@@ -1,7 +1,7 @@
 <template>
-  <button type="button" class="discovery-book-card group text-left shrink-0 focus:outline-hidden" :style="{ width: width + 'px' }" @click="$emit('select', book)">
-    <div class="relative w-full rounded-md overflow-hidden bg-primary/40 shadow-md group-hover:shadow-xl group-focus-visible:ring-2 ring-yellow-400 transition-shadow" :style="{ height: width + 'px' }">
-      <img v-if="book.cover" :src="book.cover" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" :alt="book.title" />
+  <button type="button" class="discovery-book-card abs-card group text-left shrink-0 focus:outline-hidden pt-1" :style="{ width: width + 'px' }" @click="$emit('select', book)">
+    <div class="abs-card-cover relative w-full rounded-[0.6em] overflow-hidden bg-surface-3" :style="{ height: width + 'px' }">
+      <img v-if="book.cover" :src="book.cover" loading="lazy" class="w-full h-full object-cover" :alt="book.title" />
       <div v-else class="w-full h-full flex items-center justify-center p-2 text-center text-sm text-gray-300">{{ book.title }}</div>
 
       <div v-if="statusLabel" class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-xxs font-semibold flex items-center shadow" :class="statusClass">

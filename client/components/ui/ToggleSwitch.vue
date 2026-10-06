@@ -1,7 +1,7 @@
 <template>
   <div>
-    <button :aria-labelledby="labeledBy" :aria-label="label" role="checkbox" type="button" class="border rounded-full border-black-100 flex items-center cursor-pointer justify-start" :style="{ width: buttonWidth + 'px' }" :aria-checked="toggleValue" :class="className" @click="clickToggle">
-      <span class="rounded-full border border-black-50 shadow-sm transform transition-transform duration-100" :style="{ width: cursorHeightWidth + 'px', height: cursorHeightWidth + 'px' }" :class="switchClassName"></span>
+    <button :aria-labelledby="labeledBy" :aria-label="label" role="checkbox" type="button" class="border rounded-full border-white/10 flex items-center cursor-pointer justify-start p-0.5 transition-colors duration-200" :style="{ width: buttonWidth + 'px' }" :aria-checked="toggleValue" :class="className" @click="clickToggle">
+      <span class="rounded-full shadow-md transform transition-transform duration-200 ease-out" :style="switchStyle" :class="switchClassName"></span>
     </button>
   </div>
 </template>
@@ -12,11 +12,11 @@ export default {
     value: Boolean,
     onColor: {
       type: String,
-      default: 'success'
+      default: 'brand'
     },
     offColor: {
       type: String,
-      default: 'primary'
+      default: 'surface-4'
     },
     disabled: Boolean,
     labeledBy: String,
@@ -36,19 +36,29 @@ export default {
       }
     },
     className() {
-      if (this.disabled) return this.toggleValue ? `bg-${this.onColor} cursor-not-allowed` : `bg-${this.offColor} cursor-not-allowed`
-      return this.toggleValue ? `bg-${this.onColor}` : `bg-${this.offColor}`
+      // Literal class names so Tailwind generates them (custom colors fall back to bg-<color>)
+      const colorClasses = { brand: 'bg-brand', 'surface-4': 'bg-surface-4', success: 'bg-success', primary: 'bg-primary' }
+      const color = this.toggleValue ? this.onColor : this.offColor
+      const bg = colorClasses[color] || `bg-${color}`
+      return this.disabled ? `${bg} opacity-60 cursor-not-allowed` : bg
     },
     switchClassName() {
-      var bgColor = this.disabled ? 'bg-gray-300' : 'bg-white'
-      return this.toggleValue ? 'translate-x-5 ' + bgColor : bgColor
+      return this.disabled ? 'bg-gray-300' : 'bg-white'
+    },
+    switchStyle() {
+      return {
+        width: this.cursorHeightWidth + 'px',
+        height: this.cursorHeightWidth + 'px',
+        transform: this.toggleValue ? `translateX(${this.cursorHeightWidth}px)` : 'translateX(0)'
+      }
     },
     cursorHeightWidth() {
       if (this.size === 'sm') return 16
       return 20
     },
     buttonWidth() {
-      return this.cursorHeightWidth * 2
+      // two knob widths + padding (2px each side) + border (1px each side)
+      return this.cursorHeightWidth * 2 + 6
     }
   },
   methods: {

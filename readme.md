@@ -16,6 +16,27 @@ Join the community for help, updates, and discussion: **https://discord.gg/CTpdu
 
 ## What it adds
 
+### ✨ Premium interface
+- A full visual refresh: deep cool-neutral surfaces, a warm gold accent, the **Inter** typeface, frosted-glass
+  app bar / player / menus, and soft depth instead of flat grey boxes.
+- The wooden bookshelf is gone: covers sit on clean rows with rounded corners, a hover lift and a gold
+  play button; progress bars glow gold.
+- **Item pages** get a blurred-cover hero backdrop (Audible / Jellyfin style), a large title, a progress card
+  and pill-shaped Play / Read actions.
+- Redesigned side navigation, login screen, settings, dropdowns, inputs, toggles, modals and audio player.
+
+### 📖 Reader overhaul (EPUB)
+- **Auto-hiding chrome**: a minimal top bar (back, title, contents, "Aa", full screen) and a bottom bar with the
+  current chapter, page-in-chapter, overall % and a **scrubber** to jump anywhere in the book.
+- **Tap zones**: tap the left/right edge to turn pages, the middle to show/hide controls (plus swipe & arrow keys).
+- **"Aa" appearance panel**: Light / Sepia / Dark / Black themes, **Literata** (bundled reading typeface),
+  Georgia, Inter or the publisher's font, font size stepper, line spacing, **margins** (narrow/normal/wide),
+  single page or spread, and boldness.
+- Table of contents drawer with search, chapter percentages and the current chapter highlighted.
+- Fixes: line spacing was an absolute `rem` value applied to every element (crushing headings and ignoring
+  font size); the page-turn arrows never updated; the dark page colour didn't match the reader; settings
+  stylesheets accumulated on every page render.
+
 ### 🛍️ Storefront (Audible-style browse → one-click Get)
 - The Discovery page now opens on a **storefront**: a featured hero, genre chips and horizontally
   scrolling shelves of covers — **Best sellers**, **New & noteworthy**, **Top rated** and a shelf per

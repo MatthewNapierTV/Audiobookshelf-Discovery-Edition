@@ -1,19 +1,25 @@
 <template>
-  <div id="page-wrapper" class="bg-bg page overflow-hidden" :class="streamLibraryItem ? 'streaming' : ''">
-    <div id="item-page-wrapper" class="w-full h-full overflow-y-auto px-2 py-6 lg:p-8">
-      <div class="flex flex-col lg:flex-row max-w-6xl mx-auto">
-        <div class="w-full flex justify-center lg:block lg:w-52" style="min-width: 208px">
-          <div class="relative group" style="height: fit-content">
+  <div id="page-wrapper" class="page overflow-hidden" :class="streamLibraryItem ? 'streaming' : ''">
+    <div id="item-page-wrapper" class="relative w-full h-full overflow-y-auto overflow-x-hidden px-2 py-6 lg:px-10 lg:py-10">
+      <!-- Blurred cover backdrop (Audible / Jellyfin style hero) -->
+      <div class="absolute top-0 left-0 right-0 h-[34rem] overflow-hidden pointer-events-none" aria-hidden="true">
+        <div v-if="hasCoverImage" class="hero-backdrop" :style="{ backgroundImage: `url(${heroCoverSrc})` }" />
+        <div class="hero-fade" />
+      </div>
+
+      <div class="relative flex flex-col lg:flex-row max-w-6xl mx-auto">
+        <div class="w-full flex justify-center lg:block lg:w-60" style="min-width: 240px">
+          <div class="relative group rounded-xl overflow-hidden shadow-[0_30px_60px_-20px_rgba(0,0,0,0.85)] ring-1 ring-white/10" style="height: fit-content">
             <covers-book-cover class="relative group-hover:brightness-75 transition cursor-pointer" expand-on-click :library-item="libraryItem" :width="bookCoverWidth" :book-cover-aspect-ratio="bookCoverAspectRatio" />
 
             <!-- Item Progress Bar -->
-            <div v-if="!isPodcast" class="absolute bottom-0 left-0 h-1.5 shadow-xs z-10" :class="userIsFinished ? 'bg-success' : 'bg-yellow-400'" :style="{ width: 208 * progressPercent + 'px' }"></div>
+            <div v-if="!isPodcast" class="absolute bottom-0 left-0 h-1.5 z-10 rounded-r-full" :class="userIsFinished ? 'bg-success' : 'bg-brand shadow-[0_0_12px_rgba(245,181,68,0.8)]'" :style="{ width: bookCoverWidth * progressPercent + 'px' }"></div>
 
             <!-- Item Cover Overlay -->
             <div class="absolute top-0 left-0 w-full h-full z-10 opacity-0 group-hover:opacity-100 pointer-events-none">
               <div v-show="showPlayButton && !isStreaming" class="h-full flex items-center justify-center pointer-events-none">
-                <button class="hover:text-white text-gray-200 hover:scale-110 transform duration-200 pointer-events-auto cursor-pointer" :aria-label="$strings.ButtonPlay" @click.stop.prevent="playItem">
-                  <span class="material-symbols fill text-4xl">play_arrow</span>
+                <button class="abs-card-action pointer-events-auto cursor-pointer text-lg" :aria-label="$strings.ButtonPlay" @click.stop.prevent="playItem">
+                  <span class="material-symbols fill">play_arrow</span>
                 </button>
               </div>
 
@@ -21,10 +27,10 @@
             </div>
           </div>
         </div>
-        <div class="grow px-2 py-6 lg:py-0 md:px-10">
+        <div class="grow min-w-0 px-2 py-6 lg:py-2 md:px-12">
           <div class="flex justify-center">
             <div class="mb-4">
-              <h1 class="text-2xl md:text-3xl font-semibold">
+              <h1 class="text-3xl md:text-5xl font-bold tracking-tight leading-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.5)]">
                 <div class="flex items-center">
                   {{ title }}
                   <widgets-explicit-indicator v-if="isExplicit" />
@@ -32,15 +38,15 @@
                 </div>
               </h1>
 
-              <p v-if="bookSubtitle" class="text-gray-200 text-xl md:text-2xl">{{ bookSubtitle }}</p>
+              <p v-if="bookSubtitle" class="text-gray-300 text-lg md:text-xl mt-1">{{ bookSubtitle }}</p>
 
               <template v-for="(_series, index) in seriesList">
-                <nuxt-link :key="_series.id" :to="`/library/${libraryId}/series/${_series.id}`" class="hover:underline font-sans text-gray-300 text-lg leading-7">{{ _series.text }}</nuxt-link
+                <nuxt-link :key="_series.id" :to="`/library/${libraryId}/series/${_series.id}`" class="hover:text-white text-brand/90 text-sm font-semibold uppercase tracking-wider leading-7">{{ _series.text }}</nuxt-link
                 ><span :key="index" v-if="index < seriesList.length - 1">, </span>
               </template>
 
               <p v-if="isPodcast" class="mb-2 mt-0.5 text-gray-200 text-lg md:text-xl">{{ $getString('LabelByAuthor', [podcastAuthor]) }}</p>
-              <p v-else-if="authors.length" class="mb-2 mt-0.5 text-gray-200 text-lg md:text-xl max-w-[calc(100vw-2rem)] overflow-hidden text-ellipsis">
+              <p v-else-if="authors.length" class="mb-2 mt-1 text-gray-200 text-lg md:text-xl max-w-[calc(100vw-2rem)] overflow-hidden text-ellipsis">
                 {{ $getString('LabelByAuthor', ['']) }}<nuxt-link v-for="(author, index) in authors" :key="index" :to="`/author/${author.id}`" class="hover:underline">{{ author.name }}<span v-if="index < authors.length - 1">,&nbsp;</span></nuxt-link>
               </p>
               <p v-else class="mb-2 mt-0.5 text-gray-200 text-xl">by Unknown</p>
@@ -68,21 +74,27 @@
           </div>
 
           <!-- Progress -->
-          <div v-if="!isPodcast && progressPercent > 0" class="px-4 py-2 mt-4 bg-primary text-sm font-semibold rounded-md text-gray-100 relative max-w-max mx-auto md:mx-0" :class="resettingProgress ? 'opacity-25' : ''">
-            <p v-if="progressPercent < 1" class="leading-6">{{ $strings.LabelYourProgress }}: {{ Math.round(progressPercent * 100) }}%</p>
+          <div v-if="!isPodcast && progressPercent > 0" class="surface-card glass px-4 py-3 mt-4 text-sm font-semibold text-gray-100 relative w-full max-w-sm mx-auto md:mx-0" :class="resettingProgress ? 'opacity-25' : ''">
+            <p v-if="progressPercent < 1" class="leading-6 flex items-baseline justify-between">
+              <span>{{ $strings.LabelYourProgress }}</span
+              ><span class="text-brand text-base">{{ Math.round(progressPercent * 100) }}%</span>
+            </p>
+            <div v-if="progressPercent < 1" class="h-1.5 rounded-full bg-white/10 overflow-hidden my-1.5">
+              <div class="h-full rounded-full bg-linear-to-r from-brand to-brand-strong" :style="{ width: progressPercent * 100 + '%' }" />
+            </div>
             <p v-else class="text-xs">{{ $strings.LabelFinished }} {{ $formatDate(userProgressFinishedAt, dateFormat) }}</p>
             <p v-if="progressPercent < 1 && !useEBookProgress" class="text-gray-200 text-xs">{{ $getString('LabelTimeRemaining', [$elapsedPretty(userTimeRemaining)]) }}</p>
             <p class="text-gray-400 text-xs pt-1">{{ $strings.LabelStarted }} {{ $formatDate(userProgressStartedAt, dateFormat) }}</p>
 
-            <div v-if="!resettingProgress" class="absolute -top-1.5 -right-1.5 p-1 w-5 h-5 rounded-full bg-bg hover:bg-error border border-primary flex items-center justify-center cursor-pointer" @click.stop="clearProgressClick">
+            <div v-if="!resettingProgress" class="absolute -top-2 -right-2 p-1 w-6 h-6 rounded-full bg-surface-3 hover:bg-error border border-white/10 flex items-center justify-center cursor-pointer transition-colors" @click.stop="clearProgressClick">
               <span class="material-symbols text-sm">&#xe5cd;</span>
             </div>
           </div>
 
           <!-- Icon buttons -->
-          <div class="flex items-center justify-center md:justify-start pt-4">
-            <ui-btn v-if="showPlayButton" :disabled="isStreaming" color="bg-success" :padding-x="4" small class="flex items-center h-9 mr-2" @click="playItem">
-              <span v-show="!isStreaming" class="material-symbols fill text-2xl -ml-2 pr-1 text-white">&#xe037;</span>
+          <div class="flex flex-wrap items-center justify-center md:justify-start gap-y-2 pt-5">
+            <ui-btn v-if="showPlayButton" :disabled="isStreaming" color="brand" :padding-x="6" small class="flex items-center h-11 mr-2 rounded-full! text-base" @click="playItem">
+              <span v-show="!isStreaming" class="material-symbols fill text-2xl -ml-2 pr-1">&#xe037;</span>
               {{ isStreaming ? $strings.ButtonPlaying : $strings.ButtonPlay }}
             </ui-btn>
 
@@ -91,21 +103,21 @@
               {{ isMissing ? $strings.LabelMissing : $strings.LabelIncomplete }}
             </ui-btn>
 
-            <ui-btn v-if="showReadButton" color="bg-info" :padding-x="4" small class="flex items-center h-9 mr-2" @click="openEbook">
-              <span class="material-symbols text-2xl -ml-2 pr-2 text-white" aria-hidden="true">auto_stories</span>
+            <ui-btn v-if="showReadButton" :color="showPlayButton ? 'bg-white/10' : 'brand'" :padding-x="6" small class="flex items-center h-11 mr-2 rounded-full! text-base" @click="openEbook">
+              <span class="material-symbols text-2xl -ml-2 pr-2" aria-hidden="true">auto_stories</span>
               {{ $strings.ButtonRead }}
             </ui-btn>
 
             <ui-tooltip v-if="showQueueBtn" :text="isQueued ? $strings.ButtonQueueRemoveItem : $strings.ButtonQueueAddItem" direction="top">
-              <ui-icon-btn :icon="isQueued ? 'playlist_add_check' : 'playlist_play'" :bg-color="isQueued ? 'bg-primary' : 'bg-success/60'" class="mx-0.5" :class="isQueued ? 'text-success' : ''" @click="queueBtnClick" />
+              <ui-icon-btn :icon="isQueued ? 'playlist_add_check' : 'playlist_play'" bg-color="bg-white/5" :size="11" class="mx-0.5" :class="isQueued ? 'text-brand' : ''" @click="queueBtnClick" />
             </ui-tooltip>
 
             <ui-tooltip v-if="userCanUpdate" :text="$strings.LabelEdit" direction="top">
-              <ui-icon-btn icon="&#xe3c9;" outlined class="mx-0.5" :aria-label="$strings.LabelEdit" @click="editClick" />
+              <ui-icon-btn icon="&#xe3c9;" outlined :size="11" class="mx-0.5" :aria-label="$strings.LabelEdit" @click="editClick" />
             </ui-tooltip>
 
             <ui-tooltip v-if="!isPodcast" :text="userIsFinished ? $strings.MessageMarkAsNotFinished : $strings.MessageMarkAsFinished" direction="top">
-              <ui-read-icon-btn :disabled="isProcessingReadUpdate" :is-read="userIsFinished" class="mx-0.5" @click="toggleFinished" />
+              <ui-read-icon-btn :disabled="isProcessingReadUpdate" :is-read="userIsFinished" class="mx-0.5 h-11! w-11!" @click="toggleFinished" />
             </ui-tooltip>
 
             <!-- Only admin or root user can download new episodes -->
@@ -113,17 +125,17 @@
               <ui-icon-btn icon="search" class="mx-0.5" :aria-label="$strings.LabelFindEpisodes" :loading="fetchingRSSFeed" outlined @click="findEpisodesClick" />
             </ui-tooltip>
 
-            <ui-context-menu-dropdown v-if="contextMenuItems.length" :items="contextMenuItems" :menu-width="148" @action="contextMenuAction">
+            <ui-context-menu-dropdown v-if="contextMenuItems.length" :items="contextMenuItems" :menu-width="148" class="h-11! w-11! mx-0.5" @action="contextMenuAction">
               <template #default="{ showMenu, clickShowMenu, disabled }">
-                <button type="button" :disabled="disabled" class="mx-0.5 icon-btn bg-primary border border-gray-600 w-9 h-9 rounded-md flex items-center justify-center relative" aria-haspopup="listbox" :aria-expanded="showMenu" :aria-label="$strings.LabelMore" @click.stop.prevent="clickShowMenu">
+                <button type="button" :disabled="disabled" class="icon-btn bg-white/5 border border-white/10 hover:border-white/25 w-11 h-11 rounded-full flex items-center justify-center relative transition-colors" aria-haspopup="listbox" :aria-expanded="showMenu" :aria-label="$strings.LabelMore" @click.stop.prevent="clickShowMenu">
                   <span class="material-symbols text-2xl">&#xe5d3;</span>
                 </button>
               </template>
             </ui-context-menu-dropdown>
           </div>
 
-          <div class="my-4 w-full">
-            <div ref="description" id="item-description" dir="auto" role="paragraph" class="default-style less-spacing text-base text-gray-100 whitespace-pre-line mb-1" :class="{ 'show-full': showFullDescription }" v-html="description" />
+          <div class="mt-6 mb-4 w-full max-w-3xl">
+            <div ref="description" id="item-description" dir="auto" role="paragraph" class="default-style less-spacing text-[0.95rem] leading-relaxed text-gray-300 whitespace-pre-line mb-1" :class="{ 'show-full': showFullDescription }" v-html="description" />
 
             <button v-if="isDescriptionClamped" class="py-0.5 flex items-center text-slate-300 hover:text-white" @click="showFullDescription = !showFullDescription">{{ showFullDescription ? $strings.ButtonReadLess : $strings.ButtonReadMore }} <span class="material-symbols text-xl pl-1" v-html="showFullDescription ? 'expand_less' : '&#xe313;'" /></button>
           </div>
@@ -202,7 +214,13 @@ export default {
       return this.$store.getters['libraries/getBookCoverAspectRatio']
     },
     bookCoverWidth() {
-      return 208
+      return 240
+    },
+    hasCoverImage() {
+      return !!this.media?.coverPath
+    },
+    heroCoverSrc() {
+      return this.$store.getters['globals/getLibraryItemCoverSrc'](this.libraryItem)
     },
     isDeveloperMode() {
       return this.$store.state.developerMode

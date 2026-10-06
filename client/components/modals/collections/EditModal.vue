@@ -5,7 +5,7 @@
         <p class="text-3xl text-white truncate">{{ $strings.HeaderCollection }}</p>
       </div>
     </template>
-    <div class="p-4 w-full text-sm py-6 rounded-lg bg-bg shadow-lg border border-black-300 relative overflow-hidden" style="min-height: 400px; max-height: 80vh">
+    <div class="p-4 w-full text-sm py-6 rounded-2xl bg-surface-2 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)] border border-white/10 relative overflow-hidden" style="min-height: 400px; max-height: 80vh">
       <template v-if="!showImageUploader">
         <form @submit.prevent="submitForm">
           <div class="flex flex-wrap">

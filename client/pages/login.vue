@@ -1,9 +1,13 @@
 <template>
-  <div id="page-wrapper" class="w-full h-screen overflow-y-auto">
-    <div class="absolute z-0 top-0 left-0 px-6 py-3">
+  <div id="page-wrapper" class="login-page w-full h-screen overflow-y-auto">
+    <div class="login-glow" aria-hidden="true" />
+    <div class="absolute z-0 top-0 left-0 px-6 py-4">
       <div class="flex items-center">
-        <img src="~static/icon.svg" alt="Audiobookshelf Logo" class="w-10 min-w-10 h-10" />
-        <h1 class="text-xl ml-4 hidden lg:block hover:underline">audiobookshelf</h1>
+        <img src="~static/icon.svg" alt="Audiobookshelf Logo" class="w-9 min-w-9 h-9" />
+        <h1 class="ml-3 hidden lg:flex items-baseline gap-2">
+          <span class="text-lg font-semibold tracking-tight">audiobookshelf</span>
+          <span class="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-brand">Discovery</span>
+        </h1>
       </div>
     </div>
 
@@ -11,8 +15,9 @@
       <div v-if="criticalError" class="w-full max-w-md rounded-sm border border-error/25 bg-error/10 p-4">
         <p class="text-center text-lg font-semibold">{{ $strings.MessageServerCouldNotBeReached }}</p>
       </div>
-      <div v-else-if="showInitScreen" class="w-full max-w-lg px-4 md:px-8 pb-8 pt-4">
-        <p class="text-3xl text-white text-center mb-4">Initial Server Setup</p>
+      <div v-else-if="showInitScreen" class="w-full max-w-lg mx-4 my-10 px-6 md:px-10 pb-8 pt-8 surface-card glass-strong shadow-[0_40px_80px_-30px_rgba(0,0,0,0.9)]">
+        <p class="text-3xl font-bold tracking-tight text-white text-center mb-1">Welcome</p>
+        <p class="text-sm text-gray-400 text-center mb-4">Initial Server Setup</p>
         <div class="w-full h-px bg-white/10 my-4" />
 
         <form @submit.prevent="submitServerSetup">
@@ -26,16 +31,17 @@
           <ui-text-input-with-label v-model="MetadataPath" label="Metadata Path" disabled class="w-full mb-3 text-sm" />
 
           <div class="w-full flex justify-end py-3">
-            <ui-btn type="submit" :disabled="processing" color="bg-primary" class="leading-none">{{ processing ? 'Initializing...' : $strings.ButtonSubmit }}</ui-btn>
+            <ui-btn type="submit" :disabled="processing" color="brand" class="leading-none w-full h-11 rounded-full!">{{ processing ? 'Initializing...' : $strings.ButtonSubmit }}</ui-btn>
           </div>
         </form>
       </div>
-      <div v-else-if="isInit" class="w-full max-w-md px-8 pb-8 pt-4 lg:-mt-40">
-        <div class="bg-bg rounded-md shadow-lg border border-white/5 p-4">
-          <p class="text-2xl font-semibold text-center text-white mb-4">{{ $strings.HeaderLogin }}</p>
-
-          <div class="w-full h-px bg-white/10 my-4" />
-
+      <div v-else-if="isInit" class="w-full max-w-md px-6 pb-8 pt-4 lg:-mt-24">
+        <div class="flex flex-col items-center mb-8">
+          <img src="~static/icon.svg" alt="" class="w-16 h-16 mb-4 drop-shadow-[0_10px_30px_rgba(245,181,68,0.35)]" />
+          <p class="text-3xl font-bold tracking-tight text-white">{{ $strings.HeaderLogin }}</p>
+          <p class="text-sm text-gray-400 mt-1">{{ $strings.MessageLoginTagline }}</p>
+        </div>
+        <div class="surface-card glass-strong shadow-[0_40px_80px_-30px_rgba(0,0,0,0.9)] p-6 sm:p-8">
           <p v-if="loginCustomMessage" class="py-2 default-style mb-2" v-html="loginCustomMessage"></p>
 
           <p v-if="error" class="text-error text-center py-2">{{ error }}</p>
@@ -50,20 +56,20 @@
           </div>
 
           <form v-show="login_local" @submit.prevent="submitForm">
-            <label class="text-xs text-gray-300 uppercase">{{ $strings.LabelUsername }}</label>
-            <ui-text-input v-model.trim="username" autocomplete="username" :disabled="processing" class="mb-3 w-full" inputName="username" />
+            <label class="block text-[0.7rem] font-semibold tracking-wider text-gray-400 uppercase mb-1.5">{{ $strings.LabelUsername }}</label>
+            <ui-text-input v-model.trim="username" autocomplete="username" :disabled="processing" class="mb-4 w-full h-11" inputName="username" />
 
-            <label class="text-xs text-gray-300 uppercase">{{ $strings.LabelPassword }}</label>
-            <ui-text-input v-model.trim="password" type="password" autocomplete="current-password" :disabled="processing" class="w-full mb-3" inputName="password" />
-            <div class="w-full flex justify-end py-3">
-              <ui-btn type="submit" :disabled="processing" color="bg-primary" class="leading-none">{{ processing ? 'Checking...' : $strings.ButtonSubmit }}</ui-btn>
+            <label class="block text-[0.7rem] font-semibold tracking-wider text-gray-400 uppercase mb-1.5">{{ $strings.LabelPassword }}</label>
+            <ui-text-input v-model.trim="password" type="password" autocomplete="current-password" :disabled="processing" class="w-full mb-2 h-11" inputName="password" />
+            <div class="w-full pt-4">
+              <ui-btn type="submit" :disabled="processing" color="brand" class="leading-none w-full h-11 rounded-full! text-base">{{ processing ? 'Checking...' : $strings.ButtonSubmit }}</ui-btn>
             </div>
           </form>
 
           <div v-if="login_local && login_openid" class="w-full h-px bg-white/10 my-4" />
 
           <div class="w-full flex py-3">
-            <a v-if="login_openid" :href="openidAuthUri" class="w-full abs-btn outline-hidden rounded-md shadow-md relative border border-gray-600 text-center bg-primary text-white px-8 py-2 leading-none">
+            <a v-if="login_openid" :href="openidAuthUri" class="w-full abs-btn outline-hidden rounded-full relative border border-white/15 text-center bg-white/5 hover:bg-white/10 text-white font-medium px-8 py-3 leading-none transition-colors">
               {{ openIDButtonText }}
             </a>
           </div>
@@ -323,3 +329,17 @@ export default {
   }
 }
 </script>
+
+<style>
+.login-page {
+  background: radial-gradient(900px 600px at 50% -10%, rgba(245, 181, 68, 0.12), transparent 60%), radial-gradient(700px 500px at 100% 100%, rgba(79, 143, 247, 0.08), transparent 60%), #0e0f13;
+}
+.login-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+</style>

@@ -6,7 +6,7 @@
       </div>
     </template>
     <form @submit.prevent="submitForm">
-      <div class="w-full text-sm rounded-lg bg-bg shadow-lg border border-black-300">
+      <div class="w-full text-sm rounded-2xl bg-surface-2 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)] border border-white/10">
         <div class="w-full px-3 py-5 md:p-12">
           <div class="flex items-center -mx-1 mb-4">
             <div class="w-full md:w-1/2 px-1">

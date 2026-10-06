@@ -1,12 +1,12 @@
 <template>
-  <div v-if="streamLibraryItem" id="mediaPlayerContainer" class="w-full fixed bottom-0 left-0 right-0 h-48 lg:h-40 z-50 bg-primary px-2 lg:px-4 pb-1 lg:pb-4 pt-2">
-    <div class="absolute left-2 top-2 lg:left-4 cursor-pointer">
+  <div v-if="streamLibraryItem" id="mediaPlayerContainer" class="w-full fixed bottom-0 left-0 right-0 h-48 lg:h-40 z-50 glass-strong border-t hairline shadow-[0_-20px_40px_-20px_rgba(0,0,0,0.8)] px-2 lg:px-4 pb-1 lg:pb-4 pt-2">
+    <div class="absolute left-2 top-2 lg:left-4 cursor-pointer rounded-md overflow-hidden shadow-lg ring-1 ring-white/10">
       <covers-book-cover expand-on-click :library-item="streamLibraryItem" :width="bookCoverWidth" :book-cover-aspect-ratio="coverAspectRatio" />
     </div>
     <div class="flex items-start mb-6 lg:mb-0" :class="isSquareCover ? 'pl-18 sm:pl-24' : 'pl-12 sm:pl-16'">
       <div class="min-w-0 w-full">
         <div class="flex items-center">
-          <nuxt-link :to="`/item/${streamLibraryItem.id}`" class="hover:underline cursor-pointer text-sm sm:text-lg block truncate">
+          <nuxt-link :to="`/item/${streamLibraryItem.id}`" class="hover:underline cursor-pointer text-sm sm:text-lg font-semibold block truncate">
             {{ title }}
           </nuxt-link>
           <widgets-explicit-indicator v-if="isExplicit" />

@@ -90,6 +90,7 @@
   "MessageDiscoveryNoPermission": "You don't have permission to download or request books.",
   "MessageDiscoverySearchingIndexers": "Searching your indexers for the best release...",
   "MessageDiscoveryStorefrontUnavailable": "Recommendations are unavailable right now (the catalog couldn't be reached). You can still search above.",
+  "MessageLoginTagline": "Your library, beautifully organized.",
   "ButtonAdd": "Add",
   "ButtonAddApiKey": "Add API Key",
   "ButtonAddChapters": "Add Chapters",

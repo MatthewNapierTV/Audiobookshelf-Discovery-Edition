@@ -10,7 +10,7 @@
     </slot>
 
     <transition name="menu">
-      <div v-show="showMenu" ref="menuWrapper" role="menu" class="absolute right-0 mt-1 z-10 bg-bg border border-black-200 shadow-lg rounded-md py-1 focus:outline-hidden sm:text-sm" :style="{ width: menuWidth + 'px' }">
+      <div v-show="showMenu" ref="menuWrapper" role="menu" class="absolute right-0 mt-1 z-10 bg-surface-2/95 glass-strong border border-white/10 shadow-2xl rounded-xl py-1 focus:outline-hidden sm:text-sm" :style="{ width: menuWidth + 'px' }">
         <template v-for="(item, index) in items">
           <template v-if="item.subitems">
             <button :key="index" role="menuitem" aria-haspopup="menu" class="flex items-center px-2 py-1.5 hover:bg-white/5 text-white text-xs cursor-default w-full" :class="{ 'bg-white/5': mouseoverItemIndex == index }" @mouseover="mouseoverItem(index)" @mouseleave="mouseleaveItem(index)" @click.stop>

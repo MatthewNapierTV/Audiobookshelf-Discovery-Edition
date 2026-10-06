@@ -5,7 +5,7 @@
         <p class="text-3xl text-white truncate">{{ $strings.LabelEpisode }}</p>
       </div>
     </template>
-    <div ref="wrapper" class="p-4 w-full text-sm rounded-lg bg-bg shadow-lg border border-black-300 relative overflow-y-auto" style="max-height: 80vh">
+    <div ref="wrapper" class="p-4 w-full text-sm rounded-2xl bg-surface-2 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)] border border-white/10 relative overflow-y-auto" style="max-height: 80vh">
       <div class="flex mb-4">
         <div class="w-12 h-12">
           <covers-book-cover :library-item="libraryItem" :width="48" :book-cover-aspect-ratio="bookCoverAspectRatio" />

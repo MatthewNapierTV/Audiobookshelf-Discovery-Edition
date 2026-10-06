@@ -1,8 +1,7 @@
 <template>
-  <div cy-id="card" ref="card" :id="`series-card-${index}`" tabindex="0" :style="{ width: cardWidth + 'px' }" class="absolute rounded-xs z-30 cursor-pointer" @mousedown.prevent @mouseup.prevent @mousemove.prevent @mouseover="mouseover" @mouseleave="mouseleave" @click="clickCard">
+  <div cy-id="card" ref="card" :id="`series-card-${index}`" tabindex="0" :style="{ width: cardWidth + 'px' }" class="abs-card absolute z-30 cursor-pointer" @mousedown.prevent @mouseup.prevent @mousemove.prevent @mouseover="mouseover" @mouseleave="mouseleave" @click="clickCard">
     <div cy-id="covers-area" class="relative" :style="{ height: coverHeight + 'px' }">
-      <div class="absolute top-0 left-0 w-full box-shadow-book shadow-height" />
-      <div class="w-full h-full bg-primary relative rounded-sm overflow-hidden z-0">
+      <div class="abs-card-cover w-full h-full bg-surface-3 relative rounded-[0.6em] overflow-hidden z-0">
         <covers-group-cover v-if="series" ref="cover" :id="seriesId" :name="displayTitle" :book-items="books" :width="cardWidth" :height="coverHeight" :book-cover-aspect-ratio="bookCoverAspectRatio" />
       </div>
 

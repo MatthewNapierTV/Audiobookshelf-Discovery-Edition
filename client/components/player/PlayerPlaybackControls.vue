@@ -3,20 +3,20 @@
     <div class="flex items-center justify-center grow">
       <template v-if="!loading">
         <ui-tooltip direction="top" :text="$strings.ButtonPreviousChapter" class="mr-4 lg:mr-8">
-          <button :aria-label="$strings.ButtonPreviousChapter" class="text-gray-300" @mousedown.prevent @mouseup.prevent @click.stop="prevChapter">
+          <button :aria-label="$strings.ButtonPreviousChapter" class="text-gray-300 hover:text-white transition-colors" @mousedown.prevent @mouseup.prevent @click.stop="prevChapter">
             <span class="material-symbols text-2xl sm:text-3xl">first_page</span>
           </button>
         </ui-tooltip>
         <ui-tooltip direction="top" :text="jumpBackwardText">
-          <button :aria-label="jumpBackwardText" class="text-gray-300" @mousedown.prevent @mouseup.prevent @click.stop="jumpBackward">
+          <button :aria-label="jumpBackwardText" class="text-gray-300 hover:text-white transition-colors" @mousedown.prevent @mouseup.prevent @click.stop="jumpBackward">
             <span class="material-symbols text-2xl sm:text-3xl">replay</span>
           </button>
         </ui-tooltip>
-        <button :aria-label="paused ? $strings.ButtonPlay : $strings.ButtonPause" class="p-2 shadow-xs bg-accent flex items-center justify-center rounded-full text-primary mx-4 lg:mx-8" :class="seekLoading ? 'animate-spin' : ''" @mousedown.prevent @mouseup.prevent @click.stop="playPause">
-          <span class="material-symbols fill text-2xl">{{ seekLoading ? 'autorenew' : paused ? 'play_arrow' : 'pause' }}</span>
+        <button :aria-label="paused ? $strings.ButtonPlay : $strings.ButtonPause" class="p-3 btn-brand flex items-center justify-center rounded-full mx-4 lg:mx-8 hover:scale-105 transition-transform" :class="seekLoading ? 'animate-spin' : ''" @mousedown.prevent @mouseup.prevent @click.stop="playPause">
+          <span class="material-symbols fill text-3xl">{{ seekLoading ? 'autorenew' : paused ? 'play_arrow' : 'pause' }}</span>
         </button>
         <ui-tooltip direction="top" :text="jumpForwardText">
-          <button :aria-label="jumpForwardText" class="text-gray-300" @mousedown.prevent @mouseup.prevent @click.stop="jumpForward">
+          <button :aria-label="jumpForwardText" class="text-gray-300 hover:text-white transition-colors" @mousedown.prevent @mouseup.prevent @click.stop="jumpForward">
             <span class="material-symbols text-2xl sm:text-3xl">forward_media</span>
           </button>
         </ui-tooltip>
@@ -27,7 +27,7 @@
         </ui-tooltip>
       </template>
       <template v-else>
-        <div class="cursor-pointer p-2 shadow-xs bg-accent flex items-center justify-center rounded-full text-primary mx-8 animate-spin">
+        <div class="cursor-pointer p-3 btn-brand flex items-center justify-center rounded-full mx-8 animate-spin">
           <span class="material-symbols text-2xl">autorenew</span>
         </div>
       </template>

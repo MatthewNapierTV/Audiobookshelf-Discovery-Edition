@@ -1,7 +1,7 @@
 <template>
   <div ref="wrapper" class="relative" v-click-outside="clickOutside">
     <div class="relative h-9">
-      <button type="button" class="relative w-full h-full border border-gray-500 hover:border-gray-400 rounded-sm shadow-xs pl-3 pr-3 py-0 text-left focus:outline-hidden cursor-pointer" aria-haspopup="menu" :aria-expanded="showMenu" @click.prevent="showMenu = !showMenu">
+      <button type="button" class="relative w-full h-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full pl-4 pr-3 py-0 transition-colors text-left focus:outline-hidden cursor-pointer" aria-haspopup="menu" :aria-expanded="showMenu" @click.prevent="showMenu = !showMenu">
         <span class="flex items-center justify-between">
           <span class="block truncate text-xs">{{ selectedText }}</span>
         </span>

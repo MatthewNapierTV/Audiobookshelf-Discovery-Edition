@@ -1,6 +1,6 @@
 <template>
   <modals-modal v-model="show" name="discovery-book" :width="760" :height="'unset'" :processing="processing">
-    <div v-if="book" class="w-full rounded-lg bg-bg shadow-lg border border-black-300 overflow-y-auto overflow-x-hidden" style="max-height: 85vh">
+    <div v-if="book" class="w-full rounded-2xl bg-surface-2 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)] border border-white/10 overflow-y-auto overflow-x-hidden" style="max-height: 85vh">
       <!-- Blurred cover backdrop, Audible product page style -->
       <div class="relative">
         <div v-if="book.cover" class="absolute inset-0 overflow-hidden">
@@ -38,7 +38,7 @@
               </div>
 
               <div v-if="book.status !== 'owned' && (canDownload || canRequest)" class="flex flex-wrap items-center gap-2">
-                <ui-btn color="bg-yellow-500" class="text-black! font-semibold" :disabled="processing" @click="grab('audiobook')"> <span class="material-symbols text-lg align-middle mr-1">headphones</span>{{ canDownload ? $strings.ButtonDiscoveryGetAudiobook : $strings.ButtonDiscoveryRequestAudiobook }} </ui-btn>
+                <ui-btn color="brand" :disabled="processing" @click="grab('audiobook')"> <span class="material-symbols text-lg align-middle mr-1">headphones</span>{{ canDownload ? $strings.ButtonDiscoveryGetAudiobook : $strings.ButtonDiscoveryRequestAudiobook }} </ui-btn>
                 <ui-btn :disabled="processing" @click="grab('ebook')"> <span class="material-symbols text-lg align-middle mr-1">menu_book</span>{{ canDownload ? $strings.ButtonDiscoveryGetEbook : $strings.ButtonDiscoveryRequestEbook }} </ui-btn>
                 <button type="button" class="text-xs text-gray-400 hover:text-white underline ml-1" :disabled="processing" @click="chooseManually">{{ $strings.ButtonDiscoveryChooseRelease }}</button>
               </div>

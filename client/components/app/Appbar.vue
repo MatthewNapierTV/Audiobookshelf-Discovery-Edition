@@ -1,13 +1,16 @@
 <template>
-  <div class="w-full h-16 bg-primary relative">
+  <div class="w-full h-16 bg-primary/95 glass border-b hairline relative">
     <div id="appbar" role="toolbar" aria-label="Appbar" class="absolute top-0 bottom-0 left-0 w-full h-full px-2 md:px-6 py-1 z-60">
       <div class="flex h-full items-center">
         <nuxt-link to="/">
-          <img src="~static/icon.svg" :alt="$strings.ButtonHome" class="w-8 min-w-8 h-8 mr-2 sm:w-10 sm:min-w-10 sm:h-10 sm:mr-4" />
+          <img src="~static/icon.svg" :alt="$strings.ButtonHome" class="w-8 min-w-8 h-8 mr-2 sm:w-9 sm:min-w-9 sm:h-9 sm:mr-3 drop-shadow-[0_4px_12px_rgba(245,181,68,0.25)]" />
         </nuxt-link>
 
         <nuxt-link to="/">
-          <h1 class="text-xl mr-6 hidden lg:block hover:underline">audiobookshelf</h1>
+          <h1 class="mr-6 hidden lg:flex items-baseline gap-2 leading-none">
+            <span class="text-lg font-semibold tracking-tight text-white">audiobookshelf</span>
+            <span class="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-brand">Discovery</span>
+          </h1>
         </nuxt-link>
 
         <ui-libraries-dropdown class="mr-2" />
@@ -24,34 +27,30 @@
 
         <widgets-notification-widget class="hidden md:block" />
 
-        <nuxt-link v-if="currentLibrary" to="/config/stats" class="hover:text-gray-200 cursor-pointer w-8 h-8 hidden sm:flex items-center justify-center mx-1">
+        <nuxt-link v-if="currentLibrary" to="/config/stats" class="text-gray-300 hover:text-white hover:bg-white/10 rounded-full cursor-pointer w-9 h-9 hidden sm:flex items-center justify-center mx-0.5 transition-colors">
           <ui-tooltip :text="$strings.HeaderYourStats" direction="bottom" class="flex items-center">
             <span class="material-symbols text-2xl" aria-label="User Stats" role="button">&#xe01d;</span>
           </ui-tooltip>
         </nuxt-link>
 
-        <nuxt-link v-if="userCanUpload && currentLibrary" to="/upload" class="hover:text-gray-200 cursor-pointer w-8 h-8 flex items-center justify-center mx-1">
+        <nuxt-link v-if="userCanUpload && currentLibrary" to="/upload" class="text-gray-300 hover:text-white hover:bg-white/10 rounded-full cursor-pointer w-9 h-9 flex items-center justify-center mx-0.5 transition-colors">
           <ui-tooltip :text="$strings.ButtonUpload" direction="bottom" class="flex items-center">
             <span class="material-symbols text-2xl" aria-label="Upload Media" role="button">&#xf09b;</span>
           </ui-tooltip>
         </nuxt-link>
 
-        <nuxt-link v-if="userIsAdminOrUp" to="/config" class="hover:text-gray-200 cursor-pointer w-8 h-8 flex items-center justify-center mx-1">
+        <nuxt-link v-if="userIsAdminOrUp" to="/config" class="text-gray-300 hover:text-white hover:bg-white/10 rounded-full cursor-pointer w-9 h-9 flex items-center justify-center mx-0.5 transition-colors">
           <ui-tooltip :text="$strings.HeaderSettings" direction="bottom" class="flex items-center">
             <span class="material-symbols text-2xl" aria-label="System Settings" role="button">&#xe8b8;</span>
           </ui-tooltip>
         </nuxt-link>
 
-        <nuxt-link to="/account" class="relative w-9 h-9 md:w-32 bg-fg border border-gray-500 rounded-sm shadow-xs ml-1.5 sm:ml-3 md:ml-5 md:pl-3 md:pr-10 py-2 text-left sm:text-sm cursor-pointer hover:bg-bg/40" aria-haspopup="listbox" aria-expanded="true">
-          <span class="items-center hidden md:flex">
-            <span class="block truncate">{{ username }}</span>
-          </span>
-          <span class="h-full md:ml-3 md:absolute inset-y-0 md:right-0 flex items-center justify-center md:pr-2 pointer-events-none">
-            <span class="material-symbols text-xl text-gray-100">&#xe7fd;</span>
-          </span>
+        <nuxt-link to="/account" class="group flex items-center gap-2 ml-1.5 sm:ml-3 md:ml-4 rounded-full md:pl-1 md:pr-3 md:py-1 md:bg-white/5 md:hover:bg-white/10 border border-transparent md:border-white/10 transition-colors cursor-pointer" :aria-label="username">
+          <span class="w-8 h-8 rounded-full bg-linear-to-br from-brand to-orange-600 text-black/80 font-semibold text-sm flex items-center justify-center uppercase shadow-inner">{{ (username || '?').charAt(0) }}</span>
+          <span class="hidden md:block text-sm text-gray-200 group-hover:text-white truncate max-w-28">{{ username }}</span>
         </nuxt-link>
       </div>
-      <div v-show="numMediaItemsSelected" class="absolute top-0 left-0 w-full h-full px-4 bg-primary flex items-center">
+      <div v-show="numMediaItemsSelected" class="absolute top-0 left-0 w-full h-full px-4 bg-surface-2 border-b border-brand/40 flex items-center">
         <h1 class="text-lg md:text-2xl px-4">{{ $getString('MessageItemsSelected', [numMediaItemsSelected]) }}</h1>
         <div class="grow" />
         <ui-btn v-if="!isPodcastLibrary && selectedMediaItemsArePlayable" color="bg-success" :padding-x="4" small class="flex items-center h-9 mr-2" @click="playSelectedItems">

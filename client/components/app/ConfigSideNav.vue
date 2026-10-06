@@ -1,21 +1,20 @@
 <template>
   <div role="toolbar" aria-orientation="vertical" aria-label="Config Sidebar">
-    <div role="navigation" aria-label="Config Navigation" class="w-44 fixed left-0 top-16 bg-bg/100 md:bg-bg/70 shadow-lg border-r border-white/5 py-3 transform transition-transform mb-12 overflow-y-auto" :class="wrapperClass + ' ' + (streamLibraryItem ? 'h-[calc(100%-270px)]' : 'h-[calc(100%-110px)]')" v-click-outside="clickOutside">
+    <div role="navigation" aria-label="Config Navigation" class="w-44 fixed left-0 top-16 bg-surface-1 border-r hairline py-3 px-2 transform transition-transform mb-12 overflow-y-auto" :class="wrapperClass + ' ' + (streamLibraryItem ? 'h-[calc(100%-270px)]' : 'h-[calc(100%-110px)]')" v-click-outside="clickOutside">
       <div v-show="isMobilePortrait" class="flex items-center justify-end pb-2 px-4 mb-1" @click="closeDrawer">
         <span class="material-symbols text-2xl">arrow_back</span>
       </div>
 
-      <nuxt-link v-for="route in configRoutes" :key="route.id" :to="route.path" class="w-full px-3 h-12 border-b border-primary/30 flex items-center cursor-pointer relative" :class="routeName === route.id ? 'bg-primary/70' : 'hover:bg-primary/30'">
+      <nuxt-link v-for="route in configRoutes" :key="route.id" :to="route.path" class="w-full px-3 h-10 my-0.5 rounded-lg flex items-center cursor-pointer relative text-sm transition-colors" :class="routeName === route.id ? 'bg-brand/15 text-brand font-semibold' : 'text-gray-300 hover:text-white hover:bg-white/5'">
         <p class="leading-4">{{ route.title }}</p>
-        <div v-show="routeName === route.iod" class="h-full w-0.5 bg-yellow-400 absolute top-0 left-0" />
       </nuxt-link>
 
       <modals-changelog-view-modal v-model="showChangelogModal" :versionData="versionData" />
     </div>
 
-    <div class="w-44 h-12 px-4 border-t bg-bg border-black/20 fixed left-0 flex flex-col justify-center" :class="wrapperClass" :style="{ bottom: streamLibraryItem ? '160px' : '0px' }">
+    <div class="w-44 h-12 px-4 border-t hairline bg-surface-1 fixed left-0 flex flex-col justify-center" :class="wrapperClass" :style="{ bottom: streamLibraryItem ? '160px' : '0px' }">
       <div class="flex items-center justify-between">
-        <button type="button" class="underline font-mono text-sm" @click="clickChangelog">v{{ $config.version }}</button>
+        <button type="button" class="font-mono text-xs text-gray-400 hover:text-white" @click="clickChangelog">v{{ $config.version }}</button>
 
         <p class="text-xs text-gray-300 italic">{{ Source }}</p>
       </div>

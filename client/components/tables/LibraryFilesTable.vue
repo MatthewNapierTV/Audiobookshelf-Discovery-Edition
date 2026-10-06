@@ -1,6 +1,6 @@
 <template>
   <div class="w-full my-2">
-    <div class="w-full bg-primary px-4 md:px-6 py-2 flex items-center cursor-pointer" @click.stop="clickBar">
+    <div class="w-full surface-card bg-surface-2/60 hover:bg-surface-3/70 transition-colors px-4 md:px-6 py-2 flex items-center cursor-pointer" @click.stop="clickBar">
       <p class="pr-2 md:pr-4">{{ $strings.HeaderLibraryFiles }}</p>
       <div class="h-5 md:h-7 w-5 md:w-7 rounded-full bg-white/10 flex items-center justify-center">
         <span class="text-sm font-mono">{{ files.length }}</span>

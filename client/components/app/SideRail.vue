@@ -1,127 +1,126 @@
 <template>
-  <div role="toolbar" aria-orientation="vertical" aria-label="Library Sidebar" class="w-20 bg-bg h-full fixed left-0 box-shadow-side z-50" style="min-width: 80px" :style="{ top: offsetTop + 'px' }">
+  <div role="toolbar" aria-orientation="vertical" aria-label="Library Sidebar" class="w-20 bg-surface-1 border-r hairline h-full fixed left-0 z-50" style="min-width: 80px" :style="{ top: offsetTop + 'px' }">
     <!-- ugly little workaround to cover up the shadow overlapping the bookshelf toolbar -->
-    <div v-if="isShowingBookshelfToolbar" class="absolute top-0 -right-4 w-4 bg-bg h-10 pointer-events-none" />
 
-    <div id="siderail-buttons-container" role="navigation" aria-label="Library Navigation" :class="{ 'player-open': streamLibraryItem }" class="w-full overflow-y-auto overflow-x-hidden">
-      <nuxt-link :to="`/library/${currentLibraryId}`" class="w-full h-20 flex flex-col items-center justify-center text-white border-b border-primary/70 hover:bg-primary cursor-pointer relative" :class="homePage ? 'bg-primary/80' : 'bg-bg/60'">
+    <div id="siderail-buttons-container" role="navigation" aria-label="Library Navigation" :class="{ 'player-open': streamLibraryItem }" class="w-full overflow-y-auto overflow-x-hidden no-scroll py-2">
+      <nuxt-link :to="`/library/${currentLibraryId}`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': homePage }">
         <span class="material-symbols text-2xl">home</span>
 
-        <p class="pt-1.5 text-center leading-4" style="font-size: 0.9rem">{{ $strings.ButtonHome }}</p>
+        <p class="siderail-label">{{ $strings.ButtonHome }}</p>
 
-        <div v-show="homePage" class="h-full w-0.5 bg-yellow-400 absolute top-0 left-0" />
+        <div v-show="homePage" class="siderail-indicator" />
       </nuxt-link>
 
-      <nuxt-link v-if="isPodcastLibrary" :to="`/library/${currentLibraryId}/podcast/latest`" class="w-full h-20 flex flex-col items-center justify-center text-white border-b border-primary/70 hover:bg-primary cursor-pointer relative" :class="isPodcastLatestPage ? 'bg-primary/80' : 'bg-bg/60'">
+      <nuxt-link v-if="isPodcastLibrary" :to="`/library/${currentLibraryId}/podcast/latest`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isPodcastLatestPage }">
         <span class="material-symbols text-2xl">&#xe241;</span>
 
-        <p class="pt-1 text-center leading-4" style="font-size: 0.9rem">{{ $strings.ButtonLatest }}</p>
+        <p class="siderail-label">{{ $strings.ButtonLatest }}</p>
 
-        <div v-show="isPodcastLatestPage" class="h-full w-0.5 bg-yellow-400 absolute top-0 left-0" />
+        <div v-show="isPodcastLatestPage" class="siderail-indicator" />
       </nuxt-link>
 
-      <nuxt-link :to="`/library/${currentLibraryId}/bookshelf`" class="w-full h-20 flex flex-col items-center justify-center text-white border-b border-primary/70 hover:bg-primary cursor-pointer relative" :class="showLibrary ? 'bg-primary/80' : 'bg-bg/60'">
+      <nuxt-link :to="`/library/${currentLibraryId}/bookshelf`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': showLibrary }">
         <span class="material-symbols text-2xl">import_contacts</span>
 
-        <p class="pt-1.5 text-center leading-4" style="font-size: 0.9rem">{{ $strings.ButtonLibrary }}</p>
+        <p class="siderail-label">{{ $strings.ButtonLibrary }}</p>
 
-        <div v-show="showLibrary" class="h-full w-0.5 bg-yellow-400 absolute top-0 left-0" />
+        <div v-show="showLibrary" class="siderail-indicator" />
       </nuxt-link>
 
-      <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/bookshelf/series`" class="w-full h-20 flex flex-col items-center justify-center text-white/80 border-b border-primary/70 hover:bg-primary cursor-pointer relative" :class="isSeriesPage ? 'bg-primary/80' : 'bg-bg/60'">
+      <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/bookshelf/series`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isSeriesPage }">
         <span class="material-symbols text-2xl">view_column</span>
 
-        <p class="pt-1.5 text-center leading-4" style="font-size: 0.9rem">{{ $strings.ButtonSeries }}</p>
+        <p class="siderail-label">{{ $strings.ButtonSeries }}</p>
 
-        <div v-show="isSeriesPage" class="h-full w-0.5 bg-yellow-400 absolute top-0 left-0" />
+        <div v-show="isSeriesPage" class="siderail-indicator" />
       </nuxt-link>
 
-      <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/bookshelf/collections`" class="w-full h-20 flex flex-col items-center justify-center text-white/80 border-b border-primary/70 hover:bg-primary cursor-pointer relative" :class="paramId === 'collections' ? 'bg-primary/80' : 'bg-bg/60'">
+      <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/bookshelf/collections`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': paramId === 'collections' }">
         <span class="material-symbols text-2xl">&#xe431;</span>
 
-        <p class="pt-1.5 text-center leading-4" style="font-size: 0.9rem">{{ $strings.ButtonCollections }}</p>
+        <p class="siderail-label">{{ $strings.ButtonCollections }}</p>
 
-        <div v-show="paramId === 'collections'" class="h-full w-0.5 bg-yellow-400 absolute top-0 left-0" />
+        <div v-show="paramId === 'collections'" class="siderail-indicator" />
       </nuxt-link>
 
-      <nuxt-link v-if="showPlaylists" :to="`/library/${currentLibraryId}/bookshelf/playlists`" class="w-full h-20 flex flex-col items-center justify-center text-white/80 border-b border-primary/70 hover:bg-primary cursor-pointer relative" :class="isPlaylistsPage ? 'bg-primary/80' : 'bg-bg/60'">
+      <nuxt-link v-if="showPlaylists" :to="`/library/${currentLibraryId}/bookshelf/playlists`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isPlaylistsPage }">
         <span class="material-symbols text-2.5xl">&#xe03d;</span>
 
-        <p class="pt-0.5 text-center leading-4" style="font-size: 0.9rem">{{ $strings.ButtonPlaylists }}</p>
+        <p class="siderail-label">{{ $strings.ButtonPlaylists }}</p>
 
-        <div v-show="isPlaylistsPage" class="h-full w-0.5 bg-yellow-400 absolute top-0 left-0" />
+        <div v-show="isPlaylistsPage" class="siderail-indicator" />
       </nuxt-link>
 
-      <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/bookshelf/authors`" class="w-full h-20 flex flex-col items-center justify-center text-white/80 border-b border-primary/70 hover:bg-primary cursor-pointer relative" :class="isAuthorsPage ? 'bg-primary/80' : 'bg-bg/60'">
+      <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/bookshelf/authors`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isAuthorsPage }">
         <span class="material-symbols text-2xl">groups</span>
 
-        <p class="pt-1 text-center leading-4" style="font-size: 0.9rem">{{ $strings.ButtonAuthors }}</p>
+        <p class="siderail-label">{{ $strings.ButtonAuthors }}</p>
 
-        <div v-show="isAuthorsPage" class="h-full w-0.5 bg-yellow-400 absolute top-0 left-0" />
+        <div v-show="isAuthorsPage" class="siderail-indicator" />
       </nuxt-link>
 
-      <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/narrators`" class="w-full h-20 flex flex-col items-center justify-center text-white/80 border-b border-primary/70 hover:bg-primary cursor-pointer relative" :class="isNarratorsPage ? 'bg-primary/80' : 'bg-bg/60'">
+      <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/narrators`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isNarratorsPage }">
         <span class="material-symbols text-2xl">&#xe91f;</span>
 
-        <p class="pt-1 text-center leading-4" style="font-size: 0.9rem">{{ $strings.LabelNarrators }}</p>
+        <p class="siderail-label">{{ $strings.LabelNarrators }}</p>
 
-        <div v-show="isNarratorsPage" class="h-full w-0.5 bg-yellow-400 absolute top-0 left-0" />
+        <div v-show="isNarratorsPage" class="siderail-indicator" />
       </nuxt-link>
 
-      <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/discovery`" class="w-full h-20 flex flex-col items-center justify-center text-white/80 border-b border-primary/70 hover:bg-primary cursor-pointer relative" :class="isDiscoveryPage ? 'bg-primary/80' : 'bg-bg/60'">
+      <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/discovery`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isDiscoveryPage }">
         <span class="material-symbols text-2xl">travel_explore</span>
 
-        <p class="pt-1 text-center leading-4" style="font-size: 0.9rem">{{ $strings.ButtonDiscovery }}</p>
+        <p class="siderail-label">{{ $strings.ButtonDiscovery }}</p>
 
-        <div v-show="isDiscoveryPage" class="h-full w-0.5 bg-yellow-400 absolute top-0 left-0" />
+        <div v-show="isDiscoveryPage" class="siderail-indicator" />
       </nuxt-link>
 
-      <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/downloads`" class="w-full h-20 flex flex-col items-center justify-center text-white/80 border-b border-primary/70 hover:bg-primary cursor-pointer relative" :class="isDownloadsPage ? 'bg-primary/80' : 'bg-bg/60'">
+      <nuxt-link v-if="isBookLibrary" :to="`/library/${currentLibraryId}/downloads`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isDownloadsPage }">
         <span class="material-symbols text-2xl">download</span>
 
-        <p class="pt-1 text-center leading-4" style="font-size: 0.9rem">{{ $strings.HeaderDownloads }}</p>
+        <p class="siderail-label">{{ $strings.HeaderDownloads }}</p>
 
-        <div v-show="isDownloadsPage" class="h-full w-0.5 bg-yellow-400 absolute top-0 left-0" />
+        <div v-show="isDownloadsPage" class="siderail-indicator" />
       </nuxt-link>
 
-      <nuxt-link v-if="isBookLibrary && userIsAdminOrUp" :to="`/library/${currentLibraryId}/stats`" class="w-full h-20 flex flex-col items-center justify-center text-white/80 border-b border-primary/70 hover:bg-primary cursor-pointer relative" :class="isStatsPage ? 'bg-primary/80' : 'bg-bg/60'">
+      <nuxt-link v-if="isBookLibrary && userIsAdminOrUp" :to="`/library/${currentLibraryId}/stats`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isStatsPage }">
         <span class="material-symbols text-2xl">&#xf190;</span>
 
-        <p class="pt-1 text-center leading-4" style="font-size: 0.9rem">{{ $strings.ButtonStats }}</p>
+        <p class="siderail-label">{{ $strings.ButtonStats }}</p>
 
-        <div v-show="isStatsPage" class="h-full w-0.5 bg-yellow-400 absolute top-0 left-0" />
+        <div v-show="isStatsPage" class="siderail-indicator" />
       </nuxt-link>
 
-      <nuxt-link v-if="isPodcastLibrary && userIsAdminOrUp" :to="`/library/${currentLibraryId}/podcast/search`" class="w-full h-20 flex flex-col items-center justify-center text-white/80 border-b border-primary/70 hover:bg-primary cursor-pointer relative" :class="isPodcastSearchPage ? 'bg-primary/80' : 'bg-bg/60'">
+      <nuxt-link v-if="isPodcastLibrary && userIsAdminOrUp" :to="`/library/${currentLibraryId}/podcast/search`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isPodcastSearchPage }">
         <span class="abs-icons icon-podcast text-xl"></span>
 
-        <p class="pt-1.5 text-center leading-4" style="font-size: 0.9rem">{{ $strings.ButtonAdd }}</p>
+        <p class="siderail-label">{{ $strings.ButtonAdd }}</p>
 
-        <div v-show="isPodcastSearchPage" class="h-full w-0.5 bg-yellow-400 absolute top-0 left-0" />
+        <div v-show="isPodcastSearchPage" class="siderail-indicator" />
       </nuxt-link>
 
-      <nuxt-link v-if="isPodcastLibrary && userIsAdminOrUp" :to="`/library/${currentLibraryId}/podcast/download-queue`" class="w-full h-20 flex flex-col items-center justify-center text-white/80 border-b border-primary/70 hover:bg-primary cursor-pointer relative" :class="isPodcastDownloadQueuePage ? 'bg-primary/80' : 'bg-bg/60'">
+      <nuxt-link v-if="isPodcastLibrary && userIsAdminOrUp" :to="`/library/${currentLibraryId}/podcast/download-queue`" class="siderail-link w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': isPodcastDownloadQueuePage }">
         <span class="material-symbols text-2xl">&#xf090;</span>
 
-        <p class="pt-1.5 text-center leading-4" style="font-size: 0.9rem">{{ $strings.ButtonDownloadQueue }}</p>
+        <p class="siderail-label">{{ $strings.ButtonDownloadQueue }}</p>
 
-        <div v-show="isPodcastDownloadQueuePage" class="h-full w-0.5 bg-yellow-400 absolute top-0 left-0" />
+        <div v-show="isPodcastDownloadQueuePage" class="siderail-indicator" />
       </nuxt-link>
 
-      <nuxt-link v-if="numIssues" :to="`/library/${currentLibraryId}/bookshelf?filter=issues`" class="w-full h-20 flex flex-col items-center justify-center text-white/80 border-b border-primary/70 hover:bg-error/40 cursor-pointer relative" :class="showingIssues ? 'bg-error/40' : 'bg-error/20'">
+      <nuxt-link v-if="numIssues" :to="`/library/${currentLibraryId}/bookshelf?filter=issues`" class="siderail-link is-issues w-full h-[4.25rem] flex flex-col items-center justify-center cursor-pointer relative transition-colors" :class="{ 'is-active': showingIssues }">
         <span class="material-symbols text-2xl">warning</span>
 
-        <p class="pt-1.5 text-center leading-4" style="font-size: 1rem">{{ $strings.ButtonIssues }}</p>
+        <p class="siderail-label">{{ $strings.ButtonIssues }}</p>
 
-        <div v-show="showingIssues" class="h-full w-0.5 bg-yellow-400 absolute top-0 left-0" />
+        <div v-show="showingIssues" class="siderail-indicator" />
         <div class="absolute top-1 right-1 w-4 h-4 rounded-full bg-white/30 flex items-center justify-center">
           <p class="text-xs font-mono pb-0.5">{{ numIssues }}</p>
         </div>
       </nuxt-link>
     </div>
 
-    <div class="w-full h-12 px-1 py-2 border-t border-black/20 bg-bg absolute left-0" :style="{ bottom: streamLibraryItem ? '224px' : '65px' }">
-      <p class="underline font-mono text-xs text-center text-gray-300 leading-3 mb-1 cursor-pointer" @click="clickChangelog">v{{ $config.version }}</p>
+    <div class="w-full h-12 px-1 py-2 border-t hairline bg-surface-1 absolute left-0" :style="{ bottom: streamLibraryItem ? '224px' : '65px' }">
+      <p class="font-mono text-xxs text-center text-gray-500 hover:text-gray-200 leading-3 mb-1 cursor-pointer" @click="clickChangelog">v{{ $config.version }}</p>
       <a v-if="hasUpdate" :href="githubTagUrl" target="_blank" class="text-warning text-xxs text-center block leading-3">Update</a>
       <p v-else class="text-xxs text-gray-400 leading-3 text-center italic">{{ Source }}</p>
     </div>
@@ -249,5 +248,59 @@ export default {
 }
 #siderail-buttons-container.player-open {
   max-height: calc(100vh - 64px - 48px - 160px);
+}
+
+.siderail-link {
+  color: #8d93a1;
+}
+.siderail-link:hover {
+  color: #fff;
+}
+.siderail-link > .material-symbols,
+.siderail-link > .abs-icons {
+  width: 3.25rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+.siderail-link:hover > .material-symbols,
+.siderail-link:hover > .abs-icons {
+  background-color: rgba(255, 255, 255, 0.07);
+}
+.siderail-link.is-active {
+  color: #fff;
+}
+.siderail-link.is-active > .material-symbols,
+.siderail-link.is-active > .abs-icons {
+  background-color: rgba(245, 181, 68, 0.16);
+  color: #f5b544;
+  font-variation-settings: 'FILL' 1;
+}
+.siderail-link.is-issues {
+  color: #f0919a;
+}
+.siderail-label {
+  padding-top: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1rem;
+  text-align: center;
+}
+.siderail-indicator {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 1.75rem;
+  width: 3px;
+  border-radius: 0 999px 999px 0;
+  background: #f5b544;
+  box-shadow: 0 0 12px rgba(245, 181, 68, 0.6);
 }
 </style>
