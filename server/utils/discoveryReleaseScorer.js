@@ -3,8 +3,8 @@
  * without the user having to look at a table of torrents.
  *
  * Scoring is deliberately conservative: a release is only eligible when the book title clearly
- * matches, it's the requested media type and it has seeders. Anything that doesn't clear the bar
- * is left for the user to pick manually.
+ * matches, it's by the right author, it's the requested media type and it has seeders. Anything
+ * that doesn't clear the bar is left for the user to pick manually (or stays an open request).
  */
 
 const STOP_WORDS = new Set(['the', 'a', 'an', 'of', 'and', 'in', 'on', 'to', 'for', 'at', 'by', 'with', 'from', 'book', 'novel', 'unabridged'])
@@ -63,6 +63,19 @@ function primaryAuthorSurname(author) {
 }
 
 /**
+ * Surnames of every listed author
+ * @param {string} author - may be a comma separated list
+ * @returns {string[]}
+ */
+function authorSurnames(author) {
+  return (author || '')
+    .split(/,|&| and /)
+    .map((name) => significantTokens(name))
+    .filter((parts) => parts.length)
+    .map((parts) => parts[parts.length - 1])
+}
+
+/**
  * @param {Object} release - normalized Prowlarr release
  * @param {{ title: string, author?: string }} book
  * @param {{ mediaType?: 'audiobook'|'ebook', minSeeders?: number, preferFreeleech?: boolean }} [options]
@@ -80,6 +93,7 @@ function scoreRelease(release, book, options = {}) {
 
   // --- Title match (required) ---
   const titleTokens = significantTokens(cleanTitle(book.title))
+  let exactTitle = false
   if (!titleTokens.length) {
     eligible = false
     reasons.push('no title')
@@ -92,17 +106,30 @@ function scoreRelease(release, book, options = {}) {
     }
     score += Math.round(ratio * 40)
     // Exact phrase is a strong signal
-    if (releaseNorm.includes(` ${normalize(cleanTitle(book.title))} `)) score += 15
+    exactTitle = releaseNorm.includes(` ${normalize(cleanTitle(book.title))} `)
+    if (exactTitle) score += 15
   }
 
   // --- Author ---
-  const surname = primaryAuthorSurname(book.author)
-  if (surname && releaseTokens.has(surname)) {
+  // Short titles ("Contend", "Atomic Habits") turn up inside plenty of other books' names, so the
+  // author has to be in the release name too. Only a long title matched word for word may skip it
+  // (some uploads leave the author out).
+  const surnames = authorSurnames(book.author)
+  if (surnames.length && surnames.some((s) => releaseTokens.has(s))) {
     score += 20
-  } else if (surname) {
-    score -= 10
-    reasons.push('author not in release name')
+  } else if (surnames.length) {
+    if (titleTokens.length >= 3 && exactTitle) {
+      score -= 10
+      reasons.push('author not in release name')
+    } else {
+      eligible = false
+      reasons.push('author mismatch')
+    }
   }
+
+  // A volume of some series when the book asked for isn't one (light novels, manga, omnibus parts)
+  const volumeRe = /(vol|volume|tome|omnibus)/
+  if (volumeRe.test(releaseNorm) && !volumeRe.test(normalize(book.title))) score -= 15
 
   // --- Media type ---
   if (release.mediaType === mediaType) {
@@ -179,6 +206,7 @@ module.exports = {
   significantTokens,
   cleanTitle,
   primaryAuthorSurname,
+  authorSurnames,
   scoreRelease,
   rankReleases
 }

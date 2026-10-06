@@ -44,6 +44,21 @@ describe('discoveryReleaseScorer', () => {
       expect(result.eligible).to.be.false
     })
 
+    it('rejects a different book that merely contains a short title word', () => {
+      const contend = { title: 'Contend', author: 'Philip Anthony Mitchell' }
+      const wrong = scoreRelease(release('Sasaki and Peeps, Vol. 6: Contend with the Otherworld [M4B]'), contend)
+      expect(wrong.eligible).to.equal(false)
+      expect(wrong.reasons).to.include('author mismatch')
+      expect(scoreRelease(release('Contend by Philip Anthony Mitchell [ENG / M4B]'), contend).eligible).to.equal(true)
+    })
+
+    it('needs the author for short titles, but not for a long title matched word for word', () => {
+      expect(scoreRelease(release('Atomic Habits [M4B]'), { title: 'Atomic Habits', author: 'James Clear' }).eligible).to.equal(false)
+      expect(scoreRelease(release('A Court of Thorns and Roses Unabridged [M4B]'), { title: 'A Court of Thorns and Roses', author: 'Sarah J. Maas' }).eligible).to.equal(true)
+      // Any listed author counts
+      expect(scoreRelease(release('Good Omens - Neil Gaiman [M4B]'), { title: 'Good Omens', author: 'Terry Pratchett, Neil Gaiman' }).eligible).to.equal(true)
+    })
+
     it('rejects usenet releases (qBittorrent only)', () => {
       const result = scoreRelease(release('Andy Weir - Project Hail Mary', { protocol: 'usenet' }), book)
       expect(result.eligible).to.be.false
