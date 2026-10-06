@@ -23,7 +23,7 @@ module.exports = {
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    title: 'Audiobookshelf',
+    title: 'Faithnet Reads',
     htmlAttrs: {
       lang: 'en'
     },
@@ -82,16 +82,16 @@ module.exports = {
     icon: false,
     meta: {
       appleStatusBarStyle: 'black',
-      name: 'Audiobookshelf',
-      theme_color: '#232323',
+      name: 'Faithnet Reads',
+      theme_color: '#0e1116',
       mobileAppIOS: true,
       nativeUI: true
     },
     manifest: {
-      name: 'Audiobookshelf',
-      short_name: 'Audiobookshelf',
+      name: 'Faithnet Reads',
+      short_name: 'Faithnet Reads',
       display: 'standalone',
-      background_color: '#232323',
+      background_color: '#0e1116',
       icons: [
         {
           src: routerBasePath + '/icon.svg',

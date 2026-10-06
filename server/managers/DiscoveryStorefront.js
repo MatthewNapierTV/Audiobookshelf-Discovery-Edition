@@ -1,11 +1,14 @@
 const Logger = require('../Logger')
 const Database = require('../Database')
 const AudibleCatalog = require('../providers/AudibleCatalog')
+const AppleBooksCharts = require('../providers/AppleBooksCharts')
+const OpenLibraryCatalog = require('../providers/OpenLibraryCatalog')
 const { normalize, cleanTitle, primaryAuthorSurname } = require('../utils/discoveryReleaseScorer')
 
 // Genre shelves shown on the storefront, matched by name against the marketplace's top level
 // Audible categories. If a category can't be resolved the shelf falls back to a keyword search.
 const FEATURED_GENRES = [
+  { key: 'faith', match: ['religion', 'spirituality', 'christian'], keywords: 'christian' },
   { key: 'scifi-fantasy', match: ['science fiction', 'fantasy'], keywords: 'science fiction fantasy' },
   { key: 'mystery', match: ['mystery', 'thriller'], keywords: 'thriller' },
   { key: 'literature', match: ['literature', 'fiction'], keywords: 'literary fiction' },
@@ -146,8 +149,9 @@ class DiscoveryStorefront {
     const seen = new Set()
     const out = []
     for (const book of books) {
-      if (seen.has(book.asin)) continue
-      seen.add(book.asin)
+      const key = book.asin || book.id
+      if (seen.has(key)) continue
+      seen.add(key)
       let status = null
       if (this.isOwned(book, snapshot)) status = 'owned'
       else status = inFlight.get(normalize(cleanTitle(book.title))) || null
@@ -170,41 +174,49 @@ class DiscoveryStorefront {
   }
 
   /**
-   * Build the storefront: personalized shelves first, then charts and genres.
+   * Build the home/storefront feed - Netflix/Audible style:
+   *  - hero: a handful of featured new & popular titles with artwork and blurbs
+   *  - top10: today's best-seller chart (rendered with big rank numerals)
+   *  - shelves: personalized rows interleaved with charts from several sources and genre rows
+   *
+   * Sources: Audible catalog (charts, genres, series/author lookups), Apple Books top charts
+   * (audiobooks + ebooks) and Open Library trending. Each source fails independently.
    *
    * @param {import('../models/User')} user
-   * @returns {Promise<{shelves: Object[], genres: {id:string,name:string}[]}>}
+   * @returns {Promise<{hero: Object[], top10: Object|null, shelves: Object[], genres: {id:string,name:string}[]}>}
    */
   async getStorefront(user) {
     const catalog = this.catalog
+    const apple = new AppleBooksCharts(this.settings.catalogRegion || 'us')
+    const openLibrary = new OpenLibraryCatalog()
     const [snapshot, inFlight, categories] = await Promise.all([this.getLibrarySnapshot(user), this.getInFlight(), catalog.getCategories()])
 
-    const shelfPromises = []
-    const addShelf = (id, title, subtitle, promise, opts = {}) => {
-      shelfPromises.push(
-        promise
-          .then((books) => ({ id, title, subtitle, ...opts, books: books || [] }))
-          .catch((error) => {
-            Logger.error(`[DiscoveryStorefront] Shelf "${id}" failed: ${error.message}`)
-            return { id, title, subtitle, ...opts, books: [] }
-          })
-      )
-    }
+    const make = (id, title, subtitle, promise, opts = {}) =>
+      promise
+        .then((books) => ({ id, title, subtitle, ...opts, books: books || [] }))
+        .catch((error) => {
+          Logger.error(`[DiscoveryStorefront] Shelf "${id}" failed: ${error.message}`)
+          return { id, title, subtitle, ...opts, books: [] }
+        })
 
     // --- Personalized ---
+    const personal = []
     if (snapshot.series.length) {
-      addShelf('next-in-series', 'Continue your series', 'The next book in series you already have', this.getNextInSeries(snapshot))
+      personal.push(make('next-in-series', 'Continue your series', 'The next book in series you already have', this.getNextInSeries(snapshot)))
     }
-    for (const author of snapshot.authors.slice(0, MAX_AUTHOR_SHELVES)) {
-      addShelf(`author-${normalize(author.name).replace(/ /g, '-')}`, `More from ${author.name}`, `Because you have ${author.count} of their book${author.count === 1 ? '' : 's'}`, catalog.getProducts({ author: author.name, sortBy: 'BestSellers', num: 25 }), {
+    const authorShelves = snapshot.authors.slice(0, MAX_AUTHOR_SHELVES).map((author) =>
+      make(`author-${normalize(author.name).replace(/ /g, '-')}`, `Because you have ${author.name}`, `More from an author you collect`, catalog.getProducts({ author: author.name, sortBy: 'BestSellers', num: 25 }), {
         browse: { author: author.name, sortBy: 'BestSellers' }
       })
-    }
+    )
 
-    // --- Charts ---
-    addShelf('best-sellers', 'Best sellers', 'What everyone is listening to right now', catalog.getProducts({ sortBy: 'BestSellers', num: 30 }), { browse: { sortBy: 'BestSellers' }, hero: true, ranked: true })
-    addShelf('new-releases', 'New & noteworthy', 'Popular releases from the last few months', this.getNewReleases(catalog), { browse: { sortBy: '-ReleaseDate' } })
-    addShelf('top-rated', 'Top rated', 'Highest rated by listeners', catalog.getProducts({ sortBy: 'AvgRating', num: 30 }), { browse: { sortBy: 'AvgRating' } })
+    // --- Charts from several sources ---
+    const bestSellers = make('best-sellers', 'Top 10 audiobooks today', 'The Audible best-seller chart', catalog.getProducts({ sortBy: 'BestSellers', num: 30 }), { browse: { sortBy: 'BestSellers' }, ranked: true })
+    const newReleases = make('new-releases', 'New & noteworthy', 'Popular releases from the last few months', this.getNewReleases(catalog), { browse: { sortBy: '-ReleaseDate' } })
+    const topRated = make('top-rated', 'Top rated', 'Highest rated by listeners', catalog.getProducts({ sortBy: 'AvgRating', num: 30 }), { browse: { sortBy: 'AvgRating' } })
+    const appleAudio = make('apple-audiobooks', 'Top audiobooks on Apple Books', 'Updated daily from the Apple Books charts', apple.getTop('audio-books', 30), { source: 'apple' })
+    const appleEbooks = make('apple-ebooks', 'Top ebooks on Apple Books', 'Best-selling ebooks right now', apple.getTop('books', 30), { source: 'apple' })
+    const trending = make('trending', 'Trending with readers this week', 'What readers are adding on Open Library', openLibrary.getTrending('weekly', 30), { source: 'openlibrary' })
 
     // --- Genres (ordered by what's most common in your library) ---
     const genres = this.resolveGenres(categories)
@@ -213,23 +225,45 @@ class DiscoveryStorefront {
       const idx = libraryGenres.findIndex((lg) => g.match.some((m) => lg.includes(m)))
       return idx === -1 ? Number.MAX_SAFE_INTEGER : idx
     }
-    for (const genre of [...genres].sort((a, b) => genreRank(a) - genreRank(b))) {
-      const opts = genre.categoryId ? { categoryId: genre.categoryId } : { keywords: genre.keywords }
-      addShelf(`genre-${genre.key}`, genre.name || genre.keywords.replace(/\b\w/g, (c) => c.toUpperCase()), null, catalog.getProducts({ ...opts, sortBy: 'BestSellers', num: 25 }), {
-        browse: { ...opts, sortBy: 'BestSellers' }
+    const genreShelves = [...genres]
+      .sort((a, b) => genreRank(a) - genreRank(b))
+      .map((genre) => {
+        const opts = genre.categoryId ? { categoryId: genre.categoryId } : { keywords: genre.keywords }
+        return make(`genre-${genre.key}`, genre.name || genre.keywords.replace(/\b\w/g, (c) => c.toUpperCase()), null, catalog.getProducts({ ...opts, sortBy: 'BestSellers', num: 25 }), {
+          browse: { ...opts, sortBy: 'BestSellers' },
+          genre: true
+        })
       })
+
+    // Interleave like a streaming home screen: personal -> fresh -> charts -> genres, with the
+    // remaining personal rows sprinkled between genres so the page doesn't feel like one long list
+    const ordered = [...personal, newReleases, authorShelves[0], trending, appleAudio, genreShelves[0], genreShelves[1], authorShelves[1], appleEbooks, genreShelves[2], topRated, authorShelves[2], ...genreShelves.slice(3)].filter(Boolean)
+
+    const [top10Raw, ...resolved] = await Promise.all([bestSellers, ...ordered])
+    const annotateShelf = (shelf) => {
+      const books = this.annotate(shelf.books, snapshot, inFlight)
+      // Personalized shelves only make sense for books you don't have yet
+      const filtered = shelf.id.startsWith('author-') || shelf.id === 'next-in-series' ? books.filter((b) => b.status !== 'owned') : books
+      return { ...shelf, books: filtered }
     }
+    const shelves = resolved.map(annotateShelf).filter((shelf) => shelf.books.length)
+    const top10 = annotateShelf(top10Raw)
+    top10.books = top10.books.slice(0, 10)
 
-    const shelves = (await Promise.all(shelfPromises))
-      .map((shelf) => {
-        const books = this.annotate(shelf.books, snapshot, inFlight)
-        // Personalized shelves only make sense for books you don't have yet
-        const filtered = shelf.id.startsWith('author-') || shelf.id === 'next-in-series' ? books.filter((b) => b.status !== 'owned') : books
-        return { ...shelf, books: filtered }
+    // Hero: featured titles with artwork + a blurb, preferring things you don't own yet
+    const heroPool = [...(shelves.find((s) => s.id === 'new-releases')?.books || []), ...top10.books]
+    const heroSeen = new Set()
+    const hero = heroPool
+      .filter((b) => b.cover && b.description && b.status !== 'owned')
+      .filter((b) => {
+        const key = b.asin || b.id
+        if (heroSeen.has(key)) return false
+        heroSeen.add(key)
+        return true
       })
-      .filter((shelf) => shelf.books.length)
+      .slice(0, 6)
 
-    return { shelves, genres: categories }
+    return { hero, top10: top10.books.length ? top10 : null, shelves, genres: categories }
   }
 
   /**
@@ -269,6 +303,31 @@ class DiscoveryStorefront {
       return candidates[0] ? { ...candidates[0].book, reason: `Book ${candidates[0].book.series.find((s) => normalize(s.series) === seriesNorm).sequence} of ${series.name}` } : null
     })
     return (await Promise.all(lookups)).filter(Boolean)
+  }
+
+  /**
+   * Fill in blurb / narrator / length / sample for a card that came from a source without them
+   * (Apple charts, Open Library) by matching it against the Audible catalog, then Open Library.
+   *
+   * @param {{ title: string, author?: string, olKey?: string }} book
+   * @returns {Promise<Object|null>} partial card fields to merge
+   */
+  async getDetails(book) {
+    const titleNorm = normalize(cleanTitle(book.title))
+    const surname = primaryAuthorSurname(book.author)
+    if (titleNorm) {
+      const results = await this.catalog.getProducts({ title: cleanTitle(book.title), author: book.author || undefined, sortBy: 'Relevance', num: 5 })
+      const match = results.find((r) => normalize(cleanTitle(r.title)) === titleNorm && (!surname || normalize(r.author || '').includes(surname)))
+      if (match) {
+        const { asin, description, narrator, duration, sampleUrl, rating, numRatings, series, publisher, releaseDate } = match
+        return { asin, description, narrator, duration, sampleUrl, rating, numRatings, series, publisher, releaseDate, audibleMatch: true }
+      }
+    }
+    if (book.olKey) {
+      const work = await new OpenLibraryCatalog().getWork(book.olKey)
+      if (work) return work
+    }
+    return null
   }
 
   /**

@@ -5,6 +5,7 @@ const { LRUCache } = require('lru-cache')
 const Logger = require('../Logger')
 const SocketAuthority = require('../SocketAuthority')
 const { isNullOrNaN } = require('../utils')
+const readerGoals = require('../utils/readerGoals')
 const TokenManager = require('../auth/TokenManager')
 
 class UserCache {
@@ -891,8 +892,80 @@ class User extends Model {
         extraData: { libraryItemId, progress: 0, timeReading: seconds }
       })
     }
+    // Per-day reading totals power the daily goal & streak on the home screen
+    await this.updateExtraData((extraData) => {
+      extraData.readingDays = readerGoals.addToDay(extraData.readingDays, readerGoals.toDateKey(), seconds)
+    })
     userCache.maybeInvalidate(this)
     return true
+  }
+
+  /**
+   * Mutate extraData and persist it
+   * @param {(extraData: Object) => void} mutate
+   */
+  async updateExtraData(mutate) {
+    const extraData = { ...(this.extraData || {}) }
+    mutate(extraData)
+    this.extraData = extraData
+    this.changed('extraData', true)
+    await this.save()
+    userCache.maybeInvalidate(this)
+  }
+
+  // ---- "Want to Read" list (Audible wishlist / Apple Books Want to Read) ----
+
+  /** @returns {Object[]} */
+  getWishlist() {
+    return Array.isArray(this.extraData?.wishlist) ? this.extraData.wishlist : []
+  }
+
+  /**
+   * @param {Object} book - storefront card (only display fields are kept)
+   * @returns {Promise<Object[]>}
+   */
+  async addToWishlist(book) {
+    const entry = {
+      id: String(book.id || book.asin || `${book.title}|${book.author || ''}`).slice(0, 200),
+      asin: book.asin || null,
+      olKey: book.olKey || null,
+      title: String(book.title).slice(0, 300),
+      author: book.author ? String(book.author).slice(0, 300) : null,
+      narrator: book.narrator ? String(book.narrator).slice(0, 300) : null,
+      cover: typeof book.cover === 'string' && /^https?:\/\//.test(book.cover) ? book.cover : null,
+      description: book.description ? String(book.description).slice(0, 2000) : null,
+      duration: Number(book.duration) || 0,
+      rating: Number(book.rating) || null,
+      releaseDate: book.releaseDate || null,
+      format: book.format || null,
+      source: book.source || null,
+      addedAt: Date.now()
+    }
+    await this.updateExtraData((extraData) => {
+      const list = (Array.isArray(extraData.wishlist) ? extraData.wishlist : []).filter((b) => b.id !== entry.id)
+      list.unshift(entry)
+      extraData.wishlist = list.slice(0, 250)
+    })
+    return this.getWishlist()
+  }
+
+  /**
+   * @param {string} id
+   * @returns {Promise<boolean>}
+   */
+  async removeFromWishlist(id) {
+    const list = this.getWishlist()
+    if (!list.some((b) => b.id === id)) return false
+    await this.updateExtraData((extraData) => {
+      extraData.wishlist = list.filter((b) => b.id !== id)
+    })
+    return true
+  }
+
+  /** @returns {number} */
+  get dailyGoalMinutes() {
+    const goal = Number(this.extraData?.dailyGoalMinutes)
+    return goal > 0 ? goal : readerGoals.DEFAULT_GOAL_MINUTES
   }
 
   /**

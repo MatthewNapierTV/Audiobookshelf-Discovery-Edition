@@ -669,7 +669,7 @@ export default {
   --reader-panel: rgba(32, 35, 41, 0.96);
   --reader-border: rgba(255, 255, 255, 0.08);
   --reader-hover: rgba(255, 255, 255, 0.07);
-  --reader-accent: #f5b544;
+  --reader-accent: #19c8f5;
   background-color: var(--reader-bg);
   color: var(--reader-fg);
   transition:
@@ -692,7 +692,7 @@ export default {
   --reader-panel: rgba(255, 255, 255, 0.97);
   --reader-border: rgba(0, 0, 0, 0.08);
   --reader-hover: rgba(0, 0, 0, 0.05);
-  --reader-accent: #c27c0e;
+  --reader-accent: #0b86ad;
 }
 .reader-root[data-theme='sepia'] {
   --reader-bg: #f3e9d2;
@@ -702,7 +702,7 @@ export default {
   --reader-panel: rgba(248, 240, 222, 0.98);
   --reader-border: rgba(91, 70, 54, 0.14);
   --reader-hover: rgba(91, 70, 54, 0.07);
-  --reader-accent: #a0611a;
+  --reader-accent: #2b7f95;
 }
 
 .reader-muted {

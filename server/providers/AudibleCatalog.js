@@ -132,6 +132,7 @@ class AudibleCatalog {
     }
 
     return {
+      id: `audible:${p.asin}`,
       asin: p.asin,
       title: p.title,
       subtitle: p.subtitle || null,
@@ -157,6 +158,9 @@ class AudibleCatalog {
       series: seriesList.map((s) => ({ series: s.title, sequence: s.sequence || '' })).filter((s) => s.series),
       genres,
       region,
+      // Short narrator sample (Audible's "Listen to sample") when the catalog provides one
+      sampleUrl: typeof p.sample_url === 'string' && /^https:\/\//.test(p.sample_url) ? p.sample_url : null,
+      format: 'audiobook',
       source: 'audible'
     }
   }

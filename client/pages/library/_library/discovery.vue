@@ -16,12 +16,14 @@
         <div v-if="!configuredKnown" class="w-full flex justify-center py-8">
           <ui-loading-indicator />
         </div>
-        <div v-else-if="!isEnabled" class="w-full bg-warning/20 border border-warning/40 rounded p-4 text-center">
-          <p class="text-base">{{ $strings.MessageDiscoveryNotConfigured }}</p>
-          <nuxt-link v-if="userIsAdminOrUp" to="/config/discovery" class="text-warning underline text-sm">{{ $strings.HeaderDiscoverySettings }}</nuxt-link>
-        </div>
-
         <template v-else>
+          <!-- Browsing works without downloads configured; only Get/Request needs Prowlarr + qBittorrent -->
+          <div v-if="!isEnabled" class="w-full flex flex-wrap items-center gap-x-3 gap-y-1 bg-warning/10 border border-warning/30 rounded-xl px-4 py-2.5 mb-4 text-sm">
+            <span class="material-symbols text-warning text-lg">info</span>
+            <p class="text-gray-200">{{ $strings.MessageDiscoveryNotConfigured }}</p>
+            <nuxt-link v-if="userIsAdminOrUp" to="/config/discovery" class="text-warning underline">{{ $strings.HeaderDiscoverySettings }}</nuxt-link>
+          </div>
+
           <!-- Search (always available) -->
           <form @submit.prevent="submitSearch" class="flex flex-wrap items-center gap-2">
             <div class="w-40">
@@ -46,7 +48,7 @@
               </div>
               <div v-if="browseLoading" class="w-full flex justify-center py-12"><ui-loading-indicator /></div>
               <div v-else-if="browseBooks.length" class="grid gap-x-4 gap-y-6" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr))">
-                <discovery-book-card v-for="(book, index) in browseBooks" :key="book.asin || index" :book="book" :width="150" :rank="browseSort === 'BestSellers' ? index + 1 : null" @select="openBook" />
+                <discovery-book-card v-for="(book, index) in browseBooks" :key="book.asin || book.id || index" :book="book" :width="150" :rank="browseSort === 'BestSellers' ? index + 1 : null" @select="openBook" />
               </div>
               <p v-else class="text-center text-gray-400 py-8">{{ $strings.MessageNoResults }}</p>
             </div>
@@ -67,7 +69,7 @@
                   <div class="relative flex items-center gap-6 p-6 md:p-8">
                     <img v-if="heroBook.cover" :src="heroBook.cover" class="w-32 h-32 md:w-48 md:h-48 rounded-md shadow-2xl object-cover shrink-0 group-hover:scale-[1.02] transition-transform" :alt="heroBook.title" />
                     <div class="min-w-0">
-                      <p class="text-xs uppercase tracking-widest text-yellow-400 font-semibold mb-1">{{ heroShelfTitle }}</p>
+                      <p class="text-xs uppercase tracking-widest text-brand font-semibold mb-1">{{ heroShelfTitle }}</p>
                       <h2 class="text-2xl md:text-4xl font-bold leading-tight line-clamp-2">{{ heroBook.title }}</h2>
                       <p class="text-sm md:text-base text-gray-200 mt-1">{{ $getString('LabelByAuthor', [heroBook.author || $strings.LabelUnknown]) }}</p>
                       <p v-if="heroBook.description" class="hidden md:block text-sm text-gray-300 mt-3 max-w-2xl line-clamp-3">{{ heroBook.description }}</p>
@@ -181,7 +183,7 @@
       </div>
     </div>
 
-    <discovery-book-details-modal v-model="showBookModal" :book="modalBook" :library-id="currentLibraryId" :can-download="canDownload" :can-request="canRequest" @status="onBookStatus" @choose-release="chooseRelease" />
+    <discovery-book-details-modal v-model="showBookModal" :book="modalBook" :library-id="currentLibraryId" :can-download="isEnabled && canDownload" :can-request="isEnabled && canRequest" :downloads-disabled="!isEnabled" @status="onBookStatus" @choose-release="chooseRelease" />
   </div>
 </template>
 
@@ -232,6 +234,7 @@ export default {
       // Storefront
       storefrontLoading: false,
       shelves: [],
+      heroBooks: [],
       genres: [],
       browseShelf: null,
       browseBooks: [],
@@ -254,15 +257,11 @@ export default {
     isSearchActive() {
       return !!(this.bookResults.length || this.selectedBook || this.directMode || this.searchedTerm)
     },
-    heroShelf() {
-      return this.shelves.find((s) => s.hero) || null
-    },
     heroBook() {
-      return this.heroShelf?.books.find((b) => b.status !== 'owned') || null
+      return this.heroBooks[0] || null
     },
     heroShelfTitle() {
-      if (!this.heroShelf || !this.heroBook) return ''
-      return `#${this.heroShelf.books.indexOf(this.heroBook) + 1} in ${this.heroShelf.title}`
+      return this.$strings.LabelFeaturedNewRelease
     },
     sortOptions() {
       return [
@@ -279,7 +278,8 @@ export default {
         console.error('Failed to load storefront', error)
         return null
       })
-      this.shelves = data?.shelves || []
+      this.heroBooks = data?.hero || []
+      this.shelves = [data?.top10, ...(data?.shelves || [])].filter(Boolean)
       this.genres = data?.genres || []
       this.storefrontLoading = false
     },
@@ -319,6 +319,20 @@ export default {
       })
       this.browseBooks = data?.books || []
       this.browseLoading = false
+    },
+    /** Deep links from the home screen: ?q=search, or browse params (categoryId/sortBy/author/keywords) */
+    applyRouteQuery() {
+      const q = this.$route.query || {}
+      if (q.q) {
+        this.searchInput = String(q.q)
+        this.submitSearch()
+        return
+      }
+      const browse = {}
+      for (const key of ['categoryId', 'author', 'keywords', 'sortBy']) if (q[key]) browse[key] = String(q[key])
+      if (Object.keys(browse).length) {
+        this.openShelf({ title: String(q.title || this.$strings.HeaderDiscovery), subtitle: null, browse })
+      }
     },
     backToStorefront() {
       this.browseShelf = null
@@ -501,7 +515,8 @@ export default {
   async mounted() {
     this.fetchProviders()
     await this.fetchConfig()
-    if (this.isEnabled) this.fetchStorefront()
+    this.applyRouteQuery()
+    this.fetchStorefront()
   }
 }
 </script>

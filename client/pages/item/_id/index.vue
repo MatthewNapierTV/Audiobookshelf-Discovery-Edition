@@ -13,7 +13,7 @@
             <covers-book-cover class="relative group-hover:brightness-75 transition cursor-pointer" expand-on-click :library-item="libraryItem" :width="bookCoverWidth" :book-cover-aspect-ratio="bookCoverAspectRatio" />
 
             <!-- Item Progress Bar -->
-            <div v-if="!isPodcast" class="absolute bottom-0 left-0 h-1.5 z-10 rounded-r-full" :class="userIsFinished ? 'bg-success' : 'bg-brand shadow-[0_0_12px_rgba(245,181,68,0.8)]'" :style="{ width: bookCoverWidth * progressPercent + 'px' }"></div>
+            <div v-if="!isPodcast" class="absolute bottom-0 left-0 h-1.5 z-10 rounded-r-full" :class="userIsFinished ? 'bg-success' : 'bg-brand shadow-[0_0_12px_rgba(25,200,245,0.8)]'" :style="{ width: bookCoverWidth * progressPercent + 'px' }"></div>
 
             <!-- Item Cover Overlay -->
             <div class="absolute top-0 left-0 w-full h-full z-10 opacity-0 group-hover:opacity-100 pointer-events-none">

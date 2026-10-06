@@ -117,10 +117,10 @@ export default {
     },
     themeColors() {
       const themes = {
-        dark: { bg: '#1b1d22', fg: '#e8e4dc', link: '#f5b544' },
-        black: { bg: '#000000', fg: '#c9c6bf', link: '#f5b544' },
-        light: { bg: '#fbfaf7', fg: '#1d1d1f', link: '#a8650a' },
-        sepia: { bg: '#f3e9d2', fg: '#5b4636', link: '#8a4f12' }
+        dark: { bg: '#1b1d22', fg: '#e8e4dc', link: '#19c8f5' },
+        black: { bg: '#000000', fg: '#c9c6bf', link: '#19c8f5' },
+        light: { bg: '#fbfaf7', fg: '#1d1d1f', link: '#0a7fa6' },
+        sepia: { bg: '#f3e9d2', fg: '#5b4636', link: '#2b6f80' }
       }
       return themes[this.ereaderSettings.theme] || themes.dark
     },
@@ -165,7 +165,7 @@ ${fontStack ? `body *${notCode} { font-family: inherit !important; }` : ''}
 body, p, li, blockquote, dd, dt, td, th, div, span { line-height: ${lineSpacing} !important; }
 h1, h2, h3, h4, h5, h6 { line-height: 1.25 !important; letter-spacing: -0.005em; }
 body a[href], body a[href] * { color: ${link} !important; text-decoration-color: ${link}66 !important; }
-::selection { background-color: rgba(245, 181, 68, 0.35); }`
+::selection { background-color: rgba(25, 200, 245, 0.35); }`
     }
   },
   methods: {

@@ -29,3 +29,22 @@ describe('AudibleCatalog', () => {
     })
   })
 })
+
+const AppleBooksCharts = require('../../../server/providers/AppleBooksCharts')
+const OpenLibraryCatalog = require('../../../server/providers/OpenLibraryCatalog')
+
+describe('AppleBooksCharts.toBookCard', () => {
+  it('upscales artwork and drops the generic store genre', () => {
+    const card = AppleBooksCharts.toBookCard({ id: '42', name: 'Book', artistName: 'Author', artworkUrl100: 'https://x.mzstatic.com/a/100x100bb.jpg', genres: [{ name: 'Audiobooks' }, { name: 'Romance' }] }, 'audiobook')
+    expect(card).to.include({ id: 'apple:42', title: 'Book', author: 'Author', cover: 'https://x.mzstatic.com/a/600x600bb.jpg', format: 'audiobook', source: 'apple' })
+    expect(card.genres).to.deep.equal(['Romance'])
+  })
+})
+
+describe('OpenLibraryCatalog.toBookCard', () => {
+  it('handles trending (author_name/cover_i) and subject (authors/cover_id) shapes', () => {
+    expect(OpenLibraryCatalog.toBookCard({ key: '/works/OL1W', title: 'A', author_name: ['X'], cover_i: 7 })).to.include({ id: 'ol:OL1W', author: 'X', cover: 'https://covers.openlibrary.org/b/id/7-L.jpg' })
+    expect(OpenLibraryCatalog.toBookCard({ key: '/works/OL2W', title: 'B', authors: [{ name: 'Y' }], cover_id: 8 })).to.include({ author: 'Y' })
+    expect(OpenLibraryCatalog.toBookCard({ key: '/works/OL3W', title: 'No cover' })).to.be.null
+  })
+})

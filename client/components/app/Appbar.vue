@@ -3,13 +3,13 @@
     <div id="appbar" role="toolbar" aria-label="Appbar" class="absolute top-0 bottom-0 left-0 w-full h-full px-2 md:px-6 py-1 z-60">
       <div class="flex h-full items-center">
         <nuxt-link to="/">
-          <img src="~static/icon.svg" :alt="$strings.ButtonHome" class="w-8 min-w-8 h-8 mr-2 sm:w-9 sm:min-w-9 sm:h-9 sm:mr-3 drop-shadow-[0_4px_12px_rgba(245,181,68,0.25)]" />
+          <img src="~static/icon.svg" :alt="$strings.ButtonHome" class="w-8 min-w-8 h-8 mr-2 sm:w-9 sm:min-w-9 sm:h-9 sm:mr-3 drop-shadow-[0_4px_12px_rgba(25,200,245,0.25)]" />
         </nuxt-link>
 
         <nuxt-link to="/">
           <h1 class="mr-6 hidden lg:flex items-baseline gap-2 leading-none">
-            <span class="text-lg font-semibold tracking-tight text-white">audiobookshelf</span>
-            <span class="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-brand">Discovery</span>
+            <span class="text-lg font-bold tracking-tight text-white">Faithnet</span>
+            <span class="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-brand">Reads</span>
           </h1>
         </nuxt-link>
 
@@ -46,7 +46,7 @@
         </nuxt-link>
 
         <nuxt-link to="/account" class="group flex items-center gap-2 ml-1.5 sm:ml-3 md:ml-4 rounded-full md:pl-1 md:pr-3 md:py-1 md:bg-white/5 md:hover:bg-white/10 border border-transparent md:border-white/10 transition-colors cursor-pointer" :aria-label="username">
-          <span class="w-8 h-8 rounded-full bg-linear-to-br from-brand to-orange-600 text-black/80 font-semibold text-sm flex items-center justify-center uppercase shadow-inner">{{ (username || '?').charAt(0) }}</span>
+          <span class="w-8 h-8 rounded-full bg-linear-to-br from-brand to-blue-600 text-white font-semibold text-sm flex items-center justify-center uppercase shadow-inner">{{ (username || '?').charAt(0) }}</span>
           <span class="hidden md:block text-sm text-gray-200 group-hover:text-white truncate max-w-28">{{ username }}</span>
         </nuxt-link>
       </div>

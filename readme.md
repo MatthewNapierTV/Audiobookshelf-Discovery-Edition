@@ -1,12 +1,38 @@
-# Audiobookshelf — Discovery Edition
+<p align="center"><img src="images/faithnet-reads-logo.png" alt="Faithnet Reads" width="160" /></p>
 
-A modified build of [audiobookshelf](https://www.audiobookshelf.org/) (based on **v2.35.1**) that adds a
-self-hosted **Discovery** system: search for audiobooks and ebooks, find downloadable releases through
-**Prowlarr**, hand them to **qBittorrent**, and have the finished files imported into your library
-automatically — plus a persistent Downloads tab, a request/approval workflow with per-role permissions,
-and per-user activity stats.
+# Faithnet Reads
+
+A self-hosted home for your audiobooks and ebooks — with a **Netflix / Audible-style home screen** that
+showcases what's popular right now (from Audible, Apple Books and Open Library), a **Want to Read** list,
+**daily reading goals & streaks**, a redesigned **reader**, and one-click **Get** that finds the book on your
+indexers through **Prowlarr**, downloads it with **qBittorrent** and imports it into your library.
+
+Built on [audiobookshelf](https://www.audiobookshelf.org/) **v2.35.1** (GPL-3.0) and fully compatible with its
+apps, API and libraries.
 
 ![Discovery page](discovery.png)
+
+## 🏠 The home screen (what's new in Faithnet Reads)
+
+Designed around what makes Netflix, Audible, Apple Books and Jellyfin easy to use:
+
+| Pattern | Why it works | In Faithnet Reads |
+|---|---|---|
+| **One hero pick** | A single, striking starting point cuts decision fatigue | Rotating hero: *resume* what you're in the middle of, then featured new releases with artwork, blurb, narrator & length |
+| **Stacked themed rows** | Grouped carousels are easy to scan | Continue Listening/Reading, then online rows interleaved with your library's own rows |
+| **Top 10 with big numerals** | Rank numbers draw the eye to what's popular | *Top 10 audiobooks today* from the Audible chart |
+| **"Because you…" rows** | Personal context makes recommendations trustworthy | *Because you have <author>*, *Continue your series* |
+| **Wishlist** | Save now, decide later (Audible wishlist / Apple "Want to Read") | ♡ **Want to Read** on any book, with its own row |
+| **Samples** | Hearing the narrator is a top reason people pick an audiobook | **Listen to sample** in the details sheet (Audible) |
+| **Reading goals & streaks** | Small daily goals build the habit (Apple Books / Kindle) | Daily goal ring (listening + reading minutes), streak and the last 7 days |
+| **Genres everywhere** | Browsing by mood/genre is how most people discover | Genre shortcuts + genre rows (incl. Religion & Spirituality), ordered by what you read most |
+
+**Online sources** (no accounts or keys needed, cached for a few hours, each one fails independently):
+Audible catalog (charts, genres, new releases, series/author lookups, samples) ·
+Apple Books top charts (audiobooks & ebooks) · Open Library trending & subjects.
+Every cover shows whether it's **In library**, **Downloading** or **Requested**.
+
+---
 
 ## 💬 Community & Support
 

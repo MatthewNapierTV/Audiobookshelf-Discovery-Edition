@@ -277,8 +277,8 @@ export default {
 }
 .siderail-link.is-active > .material-symbols,
 .siderail-link.is-active > .abs-icons {
-  background-color: rgba(245, 181, 68, 0.16);
-  color: #f5b544;
+  background-color: rgba(25, 200, 245, 0.16);
+  color: #19c8f5;
   font-variation-settings: 'FILL' 1;
 }
 .siderail-link.is-issues {
@@ -300,7 +300,7 @@ export default {
   height: 1.75rem;
   width: 3px;
   border-radius: 0 999px 999px 0;
-  background: #f5b544;
-  box-shadow: 0 0 12px rgba(245, 181, 68, 0.6);
+  background: #19c8f5;
+  box-shadow: 0 0 12px rgba(25, 200, 245, 0.6);
 }
 </style>

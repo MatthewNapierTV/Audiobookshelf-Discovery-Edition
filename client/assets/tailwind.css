@@ -27,7 +27,7 @@
   --radius-card: 0.625rem;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px -8px rgba(0, 0, 0, 0.55);
   --shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.4), 0 18px 40px -12px rgba(0, 0, 0, 0.7);
-  --shadow-glow: 0 0 0 1px rgba(245, 181, 68, 0.35), 0 8px 30px -6px rgba(245, 181, 68, 0.35);
+  --shadow-glow: 0 0 0 1px rgba(25, 200, 245, 0.35), 0 8px 30px -6px rgba(25, 200, 245, 0.35);
 
   --spacing-0\.5e: 0.125em;
   --spacing-1e: 0.25em;
@@ -66,9 +66,9 @@
   /* Surfaces: cool, deep neutrals (bg is the raised surface, primary the base chrome) */
   --color-bg: #1d2027;
   --color-primary: #15171c;
-  --color-accent: #f5b544;
-  --color-brand: #f5b544;
-  --color-brand-strong: #ffcb6b;
+  --color-accent: #19c8f5;
+  --color-brand: #19c8f5;
+  --color-brand-strong: #7fe3ff;
   --color-surface-0: #0d0e12;
   --color-surface-1: #121419;
   --color-surface-2: #181b21;

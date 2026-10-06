@@ -3,7 +3,10 @@
     <!-- Cover size widget -->
     <widgets-cover-size-widget class="fixed right-4 z-50" :style="{ bottom: streamLibraryItem ? '181px' : '16px' }" />
 
-    <div v-if="loaded && !shelves.length && !search" class="w-full flex flex-col items-center justify-center py-12">
+    <!-- Home feed: hero / goal / online rows are provided by the page through slots -->
+    <slot name="top" />
+
+    <div v-if="loaded && !shelves.length && !search" class="w-full flex flex-col items-center justify-center" :class="homeFeed ? 'py-6' : 'py-12'">
       <p class="text-center text-2xl mb-4 py-4">{{ $getString('MessageXLibraryIsEmpty', [libraryName]) }}</p>
       <div v-if="userIsAdminOrUp" class="flex">
         <ui-btn to="/config" color="bg-primary" class="w-52 mr-2">{{ $strings.ButtonConfigureScanner }}</ui-btn>
@@ -14,15 +17,18 @@
       <p class="text-center text-xl py-4">{{ $strings.MessageBookshelfNoResultsForQuery }}</p>
     </div>
     <!-- Alternate plain view -->
-    <div v-else-if="isAlternativeBookshelfView" class="w-full mb-24e">
+    <div v-if="homeFeed || (isAlternativeBookshelfView && !(loaded && !shelves.length && !search))" class="w-full mb-24e">
+      <slot name="before-shelves" :shelves="supportedShelves" />
       <template v-for="(shelf, index) in supportedShelves">
         <widgets-item-slider :shelf-id="shelf.id" :key="index + '.'" :items="shelf.entities" :continue-listening-shelf="shelf.id === 'continue-listening' || shelf.id === 'continue-reading'" :type="shelf.type" class="bookshelf-row pl-8e my-6e" @selectEntity="(payload) => selectEntity(payload, index)">
           <h2 class="section-title text-white" :style="{ fontSize: 1.35 + 'em' }">{{ $strings[shelf.labelStringKey] }}</h2>
         </widgets-item-slider>
+        <slot name="after-shelf" :shelf="shelf" :index="index" :shelves="supportedShelves" />
       </template>
+      <slot name="bottom" :shelves="supportedShelves" />
     </div>
     <!-- Regular bookshelf view -->
-    <div v-else class="w-full">
+    <div v-else-if="!(loaded && !shelves.length && !search)" class="w-full">
       <template v-for="(shelf, index) in supportedShelves">
         <app-book-shelf-row :key="index" :index="index" :shelf="shelf" :size-multiplier="sizeMultiplier" :book-cover-width="bookCoverWidth" :book-cover-aspect-ratio="coverAspectRatio" :continue-listening-shelf="shelf.id === 'continue-listening' || shelf.id === 'continue-reading'" @selectEntity="(payload) => selectEntity(payload, index)" />
       </template>
@@ -34,6 +40,8 @@
 export default {
   props: {
     search: Boolean,
+    // Netflix/Audible style home: always uses the row layout and exposes slots for online rows
+    homeFeed: Boolean,
     results: {
       type: Object,
       default: () => {}

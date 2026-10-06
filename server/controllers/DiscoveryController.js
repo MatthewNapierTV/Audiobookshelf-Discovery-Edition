@@ -192,6 +192,27 @@ class DiscoveryController {
   }
 
   /**
+   * GET: /api/discovery/details?title=&author=&olKey=
+   * Enrich a storefront card (blurb, narrator, length, sample) for the details sheet.
+   *
+   * @this {import('../routers/ApiRouter')}
+   * @param {RequestWithUser} req
+   * @param {Response} res
+   */
+  async getBookDetails(req, res) {
+    const title = getQueryParamAsString(req.query, 'title', '')
+    if (!title) return res.status(400).json({ error: 'title is required' })
+    const author = getQueryParamAsString(req.query, 'author', '')
+    const olKey = getQueryParamAsString(req.query, 'olKey', '')
+    try {
+      res.json({ details: await this.discoveryManager.storefront.getDetails({ title, author, olKey }) })
+    } catch (error) {
+      Logger.error(`[DiscoveryController] getBookDetails failed: ${error.message}`)
+      res.status(500).json({ error: error.message })
+    }
+  }
+
+  /**
    * POST: /api/discovery/grab
    * Body: { book: { title, author, cover, ... }, mediaType, libraryId }
    * One-click "Get" from the storefront: auto-select the best release, then download or request it.

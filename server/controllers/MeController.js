@@ -5,6 +5,8 @@ const Database = require('../Database')
 const { sort } = require('../libs/fastSort')
 const { toNumber, isNullOrNaN } = require('../utils/index')
 const userStats = require('../utils/queries/userStats')
+const readerGoals = require('../utils/readerGoals')
+const { Op } = require('sequelize')
 
 /**
  * @typedef RequestUserObject
@@ -181,6 +183,106 @@ class MeController {
     }
     await req.user.addReadingTime(req.params.libraryItemId, seconds)
     res.sendStatus(200)
+  }
+
+  /**
+   * GET: /api/me/wishlist
+   *
+   * @param {RequestWithUser} req
+   * @param {Response} res
+   */
+  getWishlist(req, res) {
+    res.json({ wishlist: req.user.getWishlist() })
+  }
+
+  /**
+   * POST: /api/me/wishlist
+   * Body: storefront book card ({ id, title, author, cover, ... })
+   *
+   * @param {RequestWithUser} req
+   * @param {Response} res
+   */
+  async addToWishlist(req, res) {
+    const book = req.body || {}
+    if (!book.title || typeof book.title !== 'string') {
+      return res.status(400).send('Invalid book')
+    }
+    const wishlist = await req.user.addToWishlist(book)
+    SocketAuthority.clientEmitter(req.user.id, 'wishlist_updated', wishlist)
+    res.json({ wishlist })
+  }
+
+  /**
+   * DELETE: /api/me/wishlist/:id
+   *
+   * @param {RequestWithUser} req
+   * @param {Response} res
+   */
+  async removeFromWishlist(req, res) {
+    const removed = await req.user.removeFromWishlist(req.params.id)
+    if (!removed) return res.sendStatus(404)
+    SocketAuthority.clientEmitter(req.user.id, 'wishlist_updated', req.user.getWishlist())
+    res.json({ wishlist: req.user.getWishlist() })
+  }
+
+  /**
+   * GET: /api/me/goals
+   * Daily listening + reading minutes vs. the user's goal, current/best streak and the last 7 days.
+   *
+   * @param {RequestWithUser} req
+   * @param {Response} res
+   */
+  async getGoals(req, res) {
+    const today = readerGoals.toDateKey()
+    const since = readerGoals.shiftDateKey(today, -399)
+    const rows = await Database.playbackSessionModel.findAll({
+      where: { userId: req.user.id, date: { [Op.gte]: since } },
+      attributes: ['date', [Database.sequelize.fn('SUM', Database.sequelize.col('timeListening')), 'seconds']],
+      group: ['date'],
+      raw: true
+    })
+    const listening = {}
+    for (const row of rows) listening[row.date] = Number(row.seconds) || 0
+    const reading = req.user.extraData?.readingDays || {}
+
+    const combined = { ...listening }
+    for (const key in reading) combined[key] = (combined[key] || 0) + (Number(reading[key]) || 0)
+
+    const goalMinutes = req.user.dailyGoalMinutes
+    const streak = readerGoals.computeStreak(combined, goalMinutes, today)
+    const last7 = []
+    for (let i = 6; i >= 0; i--) {
+      const key = readerGoals.shiftDateKey(today, -i)
+      last7.push({ date: key, minutes: Math.round((combined[key] || 0) / 60) })
+    }
+    res.json({
+      goalMinutes,
+      today: {
+        listeningMinutes: Math.round((listening[today] || 0) / 60),
+        readingMinutes: Math.round((Number(reading[today]) || 0) / 60),
+        minutes: Math.round((combined[today] || 0) / 60)
+      },
+      streak,
+      last7
+    })
+  }
+
+  /**
+   * PATCH: /api/me/goals
+   * Body: { goalMinutes }
+   *
+   * @param {RequestWithUser} req
+   * @param {Response} res
+   */
+  async updateGoals(req, res) {
+    const goalMinutes = Math.round(Number(req.body?.goalMinutes))
+    if (!goalMinutes || goalMinutes < 1 || goalMinutes > 1440) {
+      return res.status(400).send('goalMinutes must be between 1 and 1440')
+    }
+    await req.user.updateExtraData((extraData) => {
+      extraData.dailyGoalMinutes = goalMinutes
+    })
+    res.json({ goalMinutes })
   }
 
   /**

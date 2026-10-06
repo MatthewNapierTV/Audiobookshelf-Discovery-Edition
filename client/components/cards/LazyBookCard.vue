@@ -32,7 +32,7 @@
         </div>
 
         <!-- No progress shown for podcasts (unless showing podcast episode) -->
-        <div cy-id="progressBar" v-if="!isPodcast || episodeProgress" class="absolute bottom-0 left-0 h-1e max-w-full z-20 rounded-r-full" :class="itemIsFinished ? 'bg-success' : 'bg-brand shadow-[0_0_10px_rgba(245,181,68,0.7)]'" :style="{ width: coverWidth * userProgressPercent + 'px' }"></div>
+        <div cy-id="progressBar" v-if="!isPodcast || episodeProgress" class="absolute bottom-0 left-0 h-1e max-w-full z-20 rounded-r-full" :class="itemIsFinished ? 'bg-success' : 'bg-brand shadow-[0_0_10px_rgba(25,200,245,0.7)]'" :style="{ width: coverWidth * userProgressPercent + 'px' }"></div>
 
         <!-- Overlay is not shown if collapsing series in library -->
         <div cy-id="overlay" v-show="!booksInSeries && libraryItem && (isHovering || isSelectionMode || isMoreMenuOpen) && !processing" class="abs-card-overlay w-full h-full absolute top-0 left-0 z-10 md:block" :class="overlayWrapperClasslist">

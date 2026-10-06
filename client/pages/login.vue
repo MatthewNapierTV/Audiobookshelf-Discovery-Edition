@@ -3,10 +3,10 @@
     <div class="login-glow" aria-hidden="true" />
     <div class="absolute z-0 top-0 left-0 px-6 py-4">
       <div class="flex items-center">
-        <img src="~static/icon.svg" alt="Audiobookshelf Logo" class="w-9 min-w-9 h-9" />
+        <img src="~static/icon.svg" alt="Faithnet Reads logo" class="w-9 min-w-9 h-9" />
         <h1 class="ml-3 hidden lg:flex items-baseline gap-2">
-          <span class="text-lg font-semibold tracking-tight">audiobookshelf</span>
-          <span class="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-brand">Discovery</span>
+          <span class="text-lg font-bold tracking-tight">Faithnet</span>
+          <span class="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-brand">Reads</span>
         </h1>
       </div>
     </div>
@@ -37,7 +37,7 @@
       </div>
       <div v-else-if="isInit" class="w-full max-w-md px-6 pb-8 pt-4 lg:-mt-24">
         <div class="flex flex-col items-center mb-8">
-          <img src="~static/icon.svg" alt="" class="w-16 h-16 mb-4 drop-shadow-[0_10px_30px_rgba(245,181,68,0.35)]" />
+          <img src="~static/icon.svg" alt="" class="w-16 h-16 mb-4 drop-shadow-[0_10px_30px_rgba(25,200,245,0.35)]" />
           <p class="text-3xl font-bold tracking-tight text-white">{{ $strings.HeaderLogin }}</p>
           <p class="text-sm text-gray-400 mt-1">{{ $strings.MessageLoginTagline }}</p>
         </div>
@@ -332,7 +332,7 @@ export default {
 
 <style>
 .login-page {
-  background: radial-gradient(900px 600px at 50% -10%, rgba(245, 181, 68, 0.12), transparent 60%), radial-gradient(700px 500px at 100% 100%, rgba(79, 143, 247, 0.08), transparent 60%), #0e0f13;
+  background: radial-gradient(900px 600px at 50% -10%, rgba(25, 200, 245, 0.12), transparent 60%), radial-gradient(700px 500px at 100% 100%, rgba(79, 143, 247, 0.08), transparent 60%), #0e0f13;
 }
 .login-glow {
   position: fixed;
